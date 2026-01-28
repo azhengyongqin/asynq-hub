@@ -9,11 +9,21 @@
     "workers": "Workers",
     "tasks": "任务"
   },
+  "theme": {
+    "light": "浅色",
+    "dark": "深色",
+    "system": "系统"
+  },
   "workers": {
     "title": "Workers",
     "subtitle": "Worker 配置与任务执行统计",
     "refresh": "刷新",
+    "listTitle": "Worker 列表",
+    "configTitle": "节点配置",
     "selectWorker": "选择 Worker...",
+    "selectWorkerHint": "请从左侧列表选择一个 Worker 查看详细状态和性能指标",
+    "searchPlaceholder": "搜索 Worker 名称...",
+    "searchQueues": "搜索队列...",
     "searchPlaceholder": "搜索 Worker...",
     "noWorkerFound": "未找到 Worker",
     "noWorkerSelected": "请从上方下拉框选择一个 Worker 查看详情",
@@ -30,6 +40,7 @@
       "retryCount": "重试次数",
       "timeout": "超时时间",
       "queues": "队列配置",
+      "redis": "Redis 地址",
       "lastHeartbeat": "最后心跳"
     },
     "stats": {
@@ -71,6 +82,7 @@
       "allStatus": "全部状态",
       "queue": "队列",
       "allQueues": "全部队列",
+      "searchTaskId": "搜索任务 ID...",
       "reset": "重置"
     },
     "table": {

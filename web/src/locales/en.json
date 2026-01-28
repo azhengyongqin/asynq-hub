@@ -9,11 +9,21 @@
     "workers": "Workers",
     "tasks": "Tasks"
   },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "workers": {
     "title": "Workers",
     "subtitle": "Worker Configuration and Task Execution Statistics",
     "refresh": "Refresh",
+    "listTitle": "Worker List",
+    "configTitle": "Node Configuration",
     "selectWorker": "Select Worker...",
+    "selectWorkerHint": "Please select a worker from the list on the left to view detailed status and performance metrics",
+    "searchPlaceholder": "Search worker name...",
+    "searchQueues": "Search queues...",
     "searchPlaceholder": "Search Worker...",
     "noWorkerFound": "No Worker Found",
     "noWorkerSelected": "Please select a Worker from the dropdown above to view details",
@@ -30,6 +40,7 @@
       "retryCount": "Retry Count",
       "timeout": "Timeout",
       "queues": "Queue Configuration",
+      "redis": "Redis Address",
       "lastHeartbeat": "Last Heartbeat"
     },
     "stats": {
@@ -71,6 +82,7 @@
       "allStatus": "All Status",
       "queue": "Queue",
       "allQueues": "All Queues",
+      "searchTaskId": "Search Task ID...",
       "reset": "Reset"
     },
     "table": {

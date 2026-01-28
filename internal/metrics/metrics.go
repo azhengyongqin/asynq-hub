@@ -9,7 +9,7 @@ var (
 	// HTTP 请求指标
 	HTTPRequestsTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "taskpm_http_requests_total",
+			Name: "asynqhub_http_requests_total",
 			Help: "Total number of HTTP requests",
 		},
 		[]string{"method", "path", "status"},
@@ -17,7 +17,7 @@ var (
 
 	HTTPRequestDuration = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "taskpm_http_request_duration_seconds",
+			Name:    "asynqhub_http_request_duration_seconds",
 			Help:    "HTTP request latency in seconds",
 			Buckets: prometheus.DefBuckets,
 		},
@@ -27,7 +27,7 @@ var (
 	// 任务指标
 	TasksCreatedTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "taskpm_tasks_created_total",
+			Name: "asynqhub_tasks_created_total",
 			Help: "Total number of tasks created",
 		},
 		[]string{"worker_name", "queue"},
@@ -35,7 +35,7 @@ var (
 
 	TasksCompletedTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "taskpm_tasks_completed_total",
+			Name: "asynqhub_tasks_completed_total",
 			Help: "Total number of tasks completed",
 		},
 		[]string{"worker_name", "status"},
@@ -43,7 +43,7 @@ var (
 
 	TaskExecutionDuration = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "taskpm_task_execution_duration_seconds",
+			Name:    "asynqhub_task_execution_duration_seconds",
 			Help:    "Task execution duration in seconds",
 			Buckets: []float64{0.1, 0.5, 1, 2, 5, 10, 30, 60, 120, 300},
 		},
@@ -53,7 +53,7 @@ var (
 	// 队列指标
 	QueueSize = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "taskpm_queue_size",
+			Name: "asynqhub_queue_size",
 			Help: "Number of tasks in queue",
 		},
 		[]string{"worker_name", "queue", "state"},
@@ -62,14 +62,14 @@ var (
 	// Worker 指标
 	WorkersTotal = promauto.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "taskpm_workers_total",
+			Name: "asynqhub_workers_total",
 			Help: "Total number of registered workers",
 		},
 	)
 
 	WorkersOnline = promauto.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "taskpm_workers_online",
+			Name: "asynqhub_workers_online",
 			Help: "Number of online workers",
 		},
 	)
@@ -77,21 +77,21 @@ var (
 	// 数据库连接池指标
 	DBConnectionsInUse = promauto.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "taskpm_db_connections_in_use",
+			Name: "asynqhub_db_connections_in_use",
 			Help: "Number of database connections in use",
 		},
 	)
 
 	DBConnectionsIdle = promauto.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "taskpm_db_connections_idle",
+			Name: "asynqhub_db_connections_idle",
 			Help: "Number of idle database connections",
 		},
 	)
 
 	DBConnectionsMax = promauto.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "taskpm_db_connections_max",
+			Name: "asynqhub_db_connections_max",
 			Help: "Maximum number of database connections",
 		},
 	)
@@ -99,7 +99,7 @@ var (
 	// 错误指标
 	ErrorsTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "taskpm_errors_total",
+			Name: "asynqhub_errors_total",
 			Help: "Total number of errors",
 		},
 		[]string{"component", "type"},

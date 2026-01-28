@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "taskpm.name" -}}
+{{- define "asynqhub.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "taskpm.fullname" -}}
+{{- define "asynqhub.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "taskpm.chart" -}}
+{{- define "asynqhub.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "taskpm.labels" -}}
-helm.sh/chart: {{ include "taskpm.chart" . }}
-{{ include "taskpm.selectorLabels" . }}
+{{- define "asynqhub.labels" -}}
+helm.sh/chart: {{ include "asynqhub.chart" . }}
+{{ include "asynqhub.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,17 +43,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "taskpm.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "taskpm.name" . }}
+{{- define "asynqhub.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "asynqhub.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "taskpm.serviceAccountName" -}}
+{{- define "asynqhub.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "taskpm.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "asynqhub.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -62,13 +62,13 @@ Create the name of the service account to use
 {{/*
 Backend full name
 */}}
-{{- define "taskpm.backend.fullname" -}}
-{{- printf "%s-backend" (include "taskpm.fullname" .) }}
+{{- define "asynqhub.backend.fullname" -}}
+{{- printf "%s-backend" (include "asynqhub.fullname" .) }}
 {{- end }}
 
 {{/*
 Worker full name
 */}}
-{{- define "taskpm.worker.fullname" -}}
-{{- printf "%s-worker" (include "taskpm.fullname" .) }}
+{{- define "asynqhub.worker.fullname" -}}
+{{- printf "%s-worker" (include "asynqhub.fullname" .) }}
 {{- end }}

@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/azhengyongqin/taskpm/internal/worker"
+	workers "github.com/azhengyongqin/asynq-hub/internal/worker"
 )
 
 // WorkerListResponse Worker 列表响应

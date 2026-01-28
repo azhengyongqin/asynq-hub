@@ -1,4 +1,4 @@
-# TaskPM 系统架构文档
+# Asynq-Hub 系统架构文档
 
 > 版本: v1.0.0  
 > 更新日期: 2026-01-26
@@ -17,7 +17,7 @@
 
 ## 系统概览
 
-TaskPM 是一个通用的分布式任务管理和队列系统，基于 Go 实现，提供：
+Asynq-Hub 是一个通用的分布式任务管理和队列系统，基于 Go 实现，提供：
 
 - ✅ 分布式任务调度与执行
 - ✅ 多队列优先级支持
@@ -31,7 +31,7 @@ TaskPM 是一个通用的分布式任务管理和队列系统，基于 Go 实现
 
 ```mermaid
 mindmap
-  root((TaskPM))
+  root((AsynqHub))
     任务管理
       创建任务
       查询任务
@@ -201,9 +201,9 @@ graph LR
 ## 目录结构
 
 ```
-taskpm/
+asynq-hub/
 ├── cmd/                    # 可执行程序入口
-│   ├── server/            # TaskPM 服务端
+│   ├── server/            # Asynq-Hub 服务端
 │   │   ├── main.go        # 入口文件
 │   │   └── webui/         # 嵌入的 Web UI
 │   └── example/           # Worker 示例
@@ -262,7 +262,7 @@ taskpm/
 │   │   ├── base/        # 基础配置
 │   │   └── overlays/    # 环境覆盖
 │   └── helm/            # Helm Charts
-│       └── taskpm/      # Helm 包
+│       └── asynq-hub/   # Helm 包
 │
 ├── prisma/              # 数据库管理
 │   ├── schema.prisma    # 数据库 Schema
@@ -429,10 +429,10 @@ erDiagram
 
 **Prometheus 指标：**
 
-- `taskpm_http_requests_total` - HTTP 请求计数
-- `taskpm_http_request_duration_seconds` - 请求延迟
-- `taskpm_tasks_total` - 任务计数
-- `taskpm_tasks_duration_seconds` - 任务执行时间
+- `asynqhub_http_requests_total` - HTTP 请求计数
+- `asynqhub_http_request_duration_seconds` - 请求延迟
+- `asynqhub_tasks_total` - 任务计数
+- `asynqhub_tasks_duration_seconds` - 任务执行时间
 
 **日志级别：**
 
@@ -544,8 +544,8 @@ sequenceDiagram
 
 ```yaml
 services:
-  taskpm:
-    image: taskpm-server
+  asynqhub:
+    image: asynqhub-server
     ports:
       - "28080:28080"
     environment:
@@ -571,12 +571,12 @@ services:
 ```mermaid
 graph TB
     subgraph "Kubernetes Cluster"
-        subgraph "Namespace: taskpm"
+        subgraph "Namespace: asynqhub"
             Ingress[Ingress<br/>nginx]
             
             subgraph "Deployments"
-                Server1[TaskPM Server<br/>Pod 1]
-                Server2[TaskPM Server<br/>Pod 2]
+                Server1[AsynqHub Server<br/>Pod 1]
+                Server2[AsynqHub Server<br/>Pod 2]
                 Worker1[Worker<br/>Pod 1]
                 Worker2[Worker<br/>Pod N]
             end
@@ -794,7 +794,7 @@ server:
 database:
   host: localhost
   port: 5432
-  name: taskpm
+  name: asynqhub
   user: postgres
   password: secret
   max_connections: 25
@@ -831,4 +831,4 @@ worker:
 
 ---
 
-**文档维护**: 本文档由 TaskPM 团队维护，如有问题请提交 Issue。
+**文档维护**: 本文档由 Asynq-Hub 团队维护，如有问题请提交 Issue。

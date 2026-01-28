@@ -10,7 +10,7 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {
-            "name": "TaskPM Support"
+            "name": "Asynq-Hub Support"
         },
         "license": {
             "name": "MIT"
@@ -1188,7 +1188,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:28080",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"http", "https"},
-	Title:            "TaskPM API",
+	Title:            "Asynq-Hub API",
 	Description:      "分布式任务管理系统 - 基于 Asynq 和 PostgreSQL 的任务调度平台",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

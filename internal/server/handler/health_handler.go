@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/azhengyongqin/taskpm/internal/healthcheck"
+	"github.com/azhengyongqin/asynq-hub/internal/healthcheck"
 )
 
 // HealthHandler 健康检查 Handler

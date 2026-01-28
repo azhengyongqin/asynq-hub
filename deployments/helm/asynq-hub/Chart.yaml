@@ -1,5 +1,5 @@
 apiVersion: v2
-name: taskpm
+name: asynq-hub
 description: A distributed task management system based on Asynq
 type: application
 version: 0.1.0
@@ -10,4 +10,4 @@ keywords:
   - distributed-system
   - worker
 maintainers:
-  - name: TaskPM Team
+  - name: Asynq-Hub Team

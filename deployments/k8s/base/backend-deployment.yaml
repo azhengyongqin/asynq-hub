@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: taskpm-backend
+  name: asynqhub-backend
   labels:
-    app: taskpm-backend
+    app: asynqhub-backend
     component: backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: taskpm-backend
+      app: asynqhub-backend
       component: backend
   template:
     metadata:
       labels:
-        app: taskpm-backend
+        app: asynqhub-backend
         component: backend
     spec:
       containers:
       - name: backend
-        image: taskpm-backend:latest
+        image: asynqhub-backend:latest
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
@@ -30,9 +30,9 @@ spec:
           protocol: TCP
         envFrom:
         - configMapRef:
-            name: taskpm-backend-config
+            name: asynqhub-backend-config
         - secretRef:
-            name: taskpm-backend-secret
+            name: asynqhub-backend-secret
         resources:
           requests:
             cpu: 100m

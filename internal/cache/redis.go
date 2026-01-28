@@ -104,7 +104,7 @@ func (c *RedisCache) TTL(ctx context.Context, key string) (time.Duration, error)
 
 // CacheKey 生成缓存 key
 func CacheKey(prefix string, parts ...string) string {
-	key := "taskpm:" + prefix
+	key := "asynqhub:" + prefix
 	for _, part := range parts {
 		key += ":" + part
 	}

@@ -50,9 +50,9 @@ func loadEnvFile() error {
 		filepath.Join(wd, ".env"),
 		// 2. 从 go-worker-sdk 目录向上查找项目根目录
 		filepath.Join(wd, "..", ".env"),
-		// 3. 从 go-worker-sdk/taskpmworker 向上查找项目根目录
+		// 3. 从 go-worker-sdk/asynqhub-worker 向上查找项目根目录
 		filepath.Join(wd, "..", "..", ".env"),
-		// 4. 从 go-worker-sdk/taskpmclient 向上查找项目根目录
+		// 4. 从 go-worker-sdk/asynqhub-client 向上查找项目根目录
 		filepath.Join(wd, "..", "..", "..", ".env"),
 	}
 
@@ -80,7 +80,7 @@ func loadEnvFile() error {
 		return err
 	}
 
-	log.Printf("[taskpmworker] 已加载环境变量文件: %s", envPath)
+	log.Printf("[asynqhub-worker] 已加载环境变量文件: %s", envPath)
 	envLoaded = true
 	return nil
 }
@@ -359,7 +359,7 @@ func (w *Worker) Run() error {
 		w.client.Close()
 	}()
 
-	log.Printf("taskpmworker start: workerName=%s redis=%s concurrency=%d baseURL=%s", w.workerName, w.redisURI, w.concurrency, w.baseURL)
+	log.Printf("asynqhub-worker start: workerName=%s redis=%s concurrency=%d baseURL=%s", w.workerName, w.redisURI, w.concurrency, w.baseURL)
 	return w.server.Run(w.mux)
 }
 

@@ -9,12 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hibiken/asynq"
 
-	asynqx "github.com/azhengyongqin/taskpm/internal/queue"
-	"github.com/azhengyongqin/taskpm/internal/server/dto"
-	"github.com/azhengyongqin/taskpm/internal/middleware"
-	"github.com/azhengyongqin/taskpm/internal/model"
-	"github.com/azhengyongqin/taskpm/internal/repository"
-	"github.com/azhengyongqin/taskpm/internal/worker"
+	"github.com/azhengyongqin/asynq-hub/internal/middleware"
+	"github.com/azhengyongqin/asynq-hub/internal/model"
+	asynqx "github.com/azhengyongqin/asynq-hub/internal/queue"
+	"github.com/azhengyongqin/asynq-hub/internal/repository"
+	"github.com/azhengyongqin/asynq-hub/internal/server/dto"
+	workers "github.com/azhengyongqin/asynq-hub/internal/worker"
 )
 
 // TaskHandler Task 相关 API Handler

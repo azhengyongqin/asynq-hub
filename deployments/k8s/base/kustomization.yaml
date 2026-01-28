@@ -13,5 +13,5 @@ resources:
 - worker-hpa.yaml
 
 commonLabels:
-  project: taskpm
+  project: asynqhub
   managed-by: kustomize

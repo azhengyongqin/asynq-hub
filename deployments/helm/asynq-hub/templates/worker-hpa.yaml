@@ -2,15 +2,15 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "taskpm.worker.fullname" . }}
+  name: {{ include "asynqhub.worker.fullname" . }}
   labels:
-    {{- include "taskpm.labels" . | nindent 4 }}
+    {{- include "asynqhub.labels" . | nindent 4 }}
     app.kubernetes.io/component: worker
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "taskpm.worker.fullname" . }}
+    name: {{ include "asynqhub.worker.fullname" . }}
   minReplicas: {{ .Values.worker.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.worker.autoscaling.maxReplicas }}
   metrics:

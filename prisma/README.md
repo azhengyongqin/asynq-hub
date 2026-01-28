@@ -15,13 +15,13 @@ pnpm install
 在项目根目录的 `.env` 文件中设置数据库连接（或使用 `POSTGRES_DSN` 环境变量）：
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:15432/taskpm?sslmode=disable"
+DATABASE_URL="postgresql://postgres:postgres@localhost:15432/asynqhub?sslmode=disable"
 ```
 
 或者使用 `POSTGRES_DSN`：
 
 ```env
-POSTGRES_DSN="postgresql://postgres:postgres@localhost:15432/taskpm?sslmode=disable"
+POSTGRES_DSN="postgresql://postgres:postgres@localhost:15432/asynqhub?sslmode=disable"
 ```
 
 ### 3. 启动数据库

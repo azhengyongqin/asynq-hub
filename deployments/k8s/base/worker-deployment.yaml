@@ -1,31 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: taskpm-worker
+  name: asynqhub-worker
   labels:
-    app: taskpm-worker
+    app: asynqhub-worker
     component: worker
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: taskpm-worker
+      app: asynqhub-worker
       component: worker
   template:
     metadata:
       labels:
-        app: taskpm-worker
+        app: asynqhub-worker
         component: worker
     spec:
       containers:
       - name: worker
-        image: taskpm-worker:latest
+        image: asynqhub-worker:latest
         imagePullPolicy: IfNotPresent
         envFrom:
         - configMapRef:
-            name: taskpm-worker-config
+            name: asynqhub-worker-config
         - secretRef:
-            name: taskpm-worker-secret
+            name: asynqhub-worker-secret
         resources:
           requests:
             cpu: 100m

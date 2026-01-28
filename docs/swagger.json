@@ -6,9 +6,9 @@
     "swagger": "2.0",
     "info": {
         "description": "分布式任务管理系统 - 基于 Asynq 和 PostgreSQL 的任务调度平台",
-        "title": "TaskPM API",
+        "title": "Asynq-Hub API",
         "contact": {
-            "name": "TaskPM Support"
+            "name": "Asynq-Hub Support"
         },
         "license": {
             "name": "MIT"

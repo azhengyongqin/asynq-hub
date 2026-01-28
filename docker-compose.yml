@@ -1,7 +1,7 @@
 networks:
-  dagenoai-taskpm-network:
+  asynqhub-network:
     driver: bridge
-    name: dagenoai-taskpm-network
+    name: asynqhub-network
 
 services:
   redis:
@@ -12,7 +12,7 @@ services:
     volumes:
       - ./.volumes/redis:/data
     networks:
-      - dagenoai-taskpm-network
+      - asynqhub-network
 
   postgres:
     image: postgres:18-alpine
@@ -20,18 +20,18 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
-      POSTGRES_DB: taskpm
+      POSTGRES_DB: asynqhub
     ports:
       - "15432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d taskpm"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d asynqhub"]
       interval: 5s
       timeout: 3s
       retries: 20
     volumes:
       - ./.volumes/postgres:/var/lib/postgresql/data
     networks:
-      - dagenoai-taskpm-network
+      - asynqhub-network
       
   asynqmon:
     image: hibiken/asynqmon:latest
@@ -43,4 +43,4 @@ services:
     depends_on:
       - redis
     networks:
-      - dagenoai-taskpm-network
+      - asynqhub-network

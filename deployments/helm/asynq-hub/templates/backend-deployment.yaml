@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "taskpm.backend.fullname" . }}
+  name: {{ include "asynqhub.backend.fullname" . }}
   labels:
-    {{- include "taskpm.labels" . | nindent 4 }}
+    {{- include "asynqhub.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
 spec:
   {{- if not .Values.backend.autoscaling.enabled }}
@@ -11,15 +11,15 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "taskpm.selectorLabels" . | nindent 6 }}
+      {{- include "asynqhub.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: backend
   template:
     metadata:
       labels:
-        {{- include "taskpm.selectorLabels" . | nindent 8 }}
+        {{- include "asynqhub.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: backend
     spec:
-      serviceAccountName: {{ include "taskpm.serviceAccountName" . }}
+      serviceAccountName: {{ include "asynqhub.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -47,7 +47,7 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "taskpm.backend.fullname" . }}-secret
+              name: {{ include "asynqhub.backend.fullname" . }}-secret
               key: postgres-password
         livenessProbe:
           httpGet:

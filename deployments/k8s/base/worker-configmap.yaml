@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: taskpm-worker-config
+  name: asynqhub-worker-config
   labels:
-    app: taskpm-worker
+    app: asynqhub-worker
 data:
-  BASE_URL: "http://taskpm-backend:28080"
+  BASE_URL: "http://asynqhub-backend:28080"
   WORKER_NAME: "worker-1"

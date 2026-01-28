@@ -9,7 +9,7 @@ fullnameOverride: ""
 # ========================================
 backend:
   image:
-    repository: taskpm-backend
+    repository: asynqhub-backend
     pullPolicy: IfNotPresent
     tag: "latest"
   
@@ -41,20 +41,20 @@ backend:
   
   # External dependencies
   redis:
-    host: taskpm-redis
+    host: asynqhub-redis
     port: 6379
     database: 0
   
   postgres:
-    host: taskpm-postgres
+    host: asynqhub-postgres
     port: 5432
-    database: taskpm
+    database: asynqhub
     username: postgres
     # password should be set via secret
 
 worker:
   image:
-    repository: taskpm-worker
+    repository: asynqhub-worker
     pullPolicy: IfNotPresent
     tag: "latest"
   
@@ -77,10 +77,10 @@ worker:
   
   config:
     workerName: "worker-1"
-    baseURL: "http://taskpm-backend:28080"
+    baseURL: "http://asynqhub-backend:28080"
   
   redis:
-    host: taskpm-redis
+    host: asynqhub-redis
     port: 6379
     database: 0
 
@@ -93,14 +93,14 @@ ingress:
   annotations: {}
     # cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
-    - host: taskpm.example.com
+    - host: asynqhub.example.com
       paths:
         - path: /
           pathType: Prefix
   tls: []
-  # - secretName: taskpm-tls
+  # - secretName: asynqhub-tls
   #   hosts:
-  #     - taskpm.example.com
+  #     - asynqhub.example.com
 
 # ========================================
 # Security Settings

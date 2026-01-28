@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/azhengyongqin/taskpm/internal/server/dto"
-	"github.com/azhengyongqin/taskpm/internal/repository"
-	"github.com/azhengyongqin/taskpm/internal/worker"
+	"github.com/azhengyongqin/asynq-hub/internal/repository"
+	"github.com/azhengyongqin/asynq-hub/internal/server/dto"
+	workers "github.com/azhengyongqin/asynq-hub/internal/worker"
 )
 
 // WorkerHandler Worker 相关 API Handler

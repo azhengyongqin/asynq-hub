@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "taskpm.worker.fullname" . }}
+  name: {{ include "asynqhub.worker.fullname" . }}
   labels:
-    {{- include "taskpm.labels" . | nindent 4 }}
+    {{- include "asynqhub.labels" . | nindent 4 }}
     app.kubernetes.io/component: worker
 spec:
   {{- if not .Values.worker.autoscaling.enabled }}
@@ -11,15 +11,15 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "taskpm.selectorLabels" . | nindent 6 }}
+      {{- include "asynqhub.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: worker
   template:
     metadata:
       labels:
-        {{- include "taskpm.selectorLabels" . | nindent 8 }}
+        {{- include "asynqhub.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: worker
     spec:
-      serviceAccountName: {{ include "taskpm.serviceAccountName" . }}
+      serviceAccountName: {{ include "asynqhub.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:

@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hibiken/asynq"
 
-	"github.com/azhengyongqin/taskpm/internal/server/dto"
-	"github.com/azhengyongqin/taskpm/internal/worker"
+	"github.com/azhengyongqin/asynq-hub/internal/server/dto"
+	workers "github.com/azhengyongqin/asynq-hub/internal/worker"
 )
 
 // QueueHandler Queue 相关 API Handler

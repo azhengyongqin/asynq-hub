@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢您对 TaskPM 项目的关注！我们欢迎并感激所有形式的贡献。
+感谢您对 Asynq-Hub 项目的关注！我们欢迎并感激所有形式的贡献。
 
 ## 📋 目录
 
@@ -92,11 +92,11 @@
 # 1. Fork 项目到您的 GitHub 账号
 
 # 2. 克隆您 fork 的仓库
-git clone https://github.com/YOUR_USERNAME/taskpm.git
-cd taskpm
+git clone https://github.com/YOUR_USERNAME/asynq-hub.git
+cd asynq-hub
 
 # 3. 添加上游仓库
-git remote add upstream https://github.com/azhengyongqin/taskpm.git
+git remote add upstream https://github.com/azhengyongqin/asynq-hub.git
 
 # 4. 验证远程仓库
 git remote -v
@@ -188,7 +188,7 @@ func newworker(c workerconfig) *Worker {
 ```go
 // ✅ 导出的类型和函数必须有注释
 // Worker 管理任务的执行和调度
-// 它自动注册到 TaskPM Server 并定期发送心跳
+// 它自动注册到 Asynq-Hub Server 并定期发送心跳
 type Worker struct {
     config WorkerConfig
     // ... 字段
@@ -251,8 +251,8 @@ import (
     "github.com/hibiken/asynq"
     
     // 3. 项目内部包
-    "github.com/azhengyongqin/taskpm/internal/config"
-    "github.com/azhengyongqin/taskpm/internal/repository"
+    "github.com/azhengyongqin/asynq-hub/internal/config"
+    "github.com/azhengyongqin/asynq-hub/internal/repository"
 )
 ```
 
@@ -497,7 +497,7 @@ PR 被批准后，维护者会合并您的代码。
 **环境信息**
 - OS: [e.g. macOS 13.0]
 - Go 版本: [e.g. 1.25]
-- TaskPM 版本: [e.g. v1.0.0]
+- Asynq-Hub 版本: [e.g. v1.0.0]
 - PostgreSQL 版本: [e.g. 18]
 - Redis 版本: [e.g. 7.2]
 
@@ -673,18 +673,18 @@ make swagger
 如果您有任何问题：
 
 1. 查看 [文档](docs/)
-2. 搜索 [现有 Issues](https://github.com/azhengyongqin/taskpm/issues)
-3. 加入 [GitHub Discussions](https://github.com/azhengyongqin/taskpm/discussions)
+2. 搜索 [现有 Issues](https://github.com/azhengyongqin/asynq-hub/issues)
+3. 加入 [GitHub Discussions](https://github.com/azhengyongqin/asynq-hub/discussions)
 4. 创建新的 Issue
 
 ## 🙏 致谢
 
-感谢所有为 TaskPM 做出贡献的开发者！
+感谢所有为 Asynq-Hub 做出贡献的开发者！
 
-您的贡献让 TaskPM 变得更好！
+您的贡献让 Asynq-Hub 变得更好！
 
 ---
 
 <div align="center">
-Made with ❤️ by TaskPM Team
+Made with ❤️ by Asynq-Hub Team
 </div>

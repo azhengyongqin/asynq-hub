@@ -12,15 +12,15 @@ import (
 
 	"github.com/hibiken/asynq"
 
-	_ "github.com/azhengyongqin/taskpm/docs" // Swagger docs
-	asynqx "github.com/azhengyongqin/taskpm/internal/queue"
-	"github.com/azhengyongqin/taskpm/internal/config"
-	"github.com/azhengyongqin/taskpm/internal/healthcheck"
-	"github.com/azhengyongqin/taskpm/internal/server"
-	"github.com/azhengyongqin/taskpm/internal/logger"
-	"github.com/azhengyongqin/taskpm/internal/repository"
-	"github.com/azhengyongqin/taskpm/internal/storage/postgres"
-	"github.com/azhengyongqin/taskpm/internal/worker"
+	_ "github.com/azhengyongqin/asynq-hub/docs" // Swagger docs
+	"github.com/azhengyongqin/asynq-hub/internal/config"
+	"github.com/azhengyongqin/asynq-hub/internal/healthcheck"
+	"github.com/azhengyongqin/asynq-hub/internal/logger"
+	asynqx "github.com/azhengyongqin/asynq-hub/internal/queue"
+	"github.com/azhengyongqin/asynq-hub/internal/repository"
+	httpserver "github.com/azhengyongqin/asynq-hub/internal/server"
+	"github.com/azhengyongqin/asynq-hub/internal/storage/postgres"
+	workers "github.com/azhengyongqin/asynq-hub/internal/worker"
 )
 
 // WebFS 嵌入 web/dist 目录下的所有静态文件
@@ -28,10 +28,10 @@ import (
 //go:embed webui
 var WebFS embed.FS
 
-// @title TaskPM API
+// @title Asynq-Hub API
 // @version 1.0.0
 // @description 分布式任务管理系统 - 基于 Asynq 和 PostgreSQL 的任务调度平台
-// @contact.name TaskPM Support
+// @contact.name Asynq-Hub Support
 // @license.name MIT
 // @BasePath /api/v1
 // @schemes http https

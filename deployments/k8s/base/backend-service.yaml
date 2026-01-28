@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: taskpm-backend
+  name: asynqhub-backend
   labels:
-    app: taskpm-backend
+    app: asynqhub-backend
     component: backend
 spec:
   type: ClusterIP
@@ -17,5 +17,5 @@ spec:
     targetPort: grpc
     protocol: TCP
   selector:
-    app: taskpm-backend
+    app: asynqhub-backend
     component: backend

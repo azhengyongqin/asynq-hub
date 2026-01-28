@@ -1,6 +1,6 @@
 # Kubernetes 部署指南
 
-本文档介绍如何在 Kubernetes 集群中部署 TaskPM 系统。
+本文档介绍如何在 Kubernetes 集群中部署 Asynq-Hub 系统。
 
 ## 前置要求
 
@@ -11,7 +11,7 @@
 
 ## 部署方式
 
-TaskPM 提供两种部署方式：
+Asynq-Hub 提供两种部署方式：
 
 1. **使用 Kustomize**（推荐用于灵活配置）
 2. **使用 Helm Chart**（推荐用于快速部署）
@@ -25,22 +25,22 @@ TaskPM 提供两种部署方式：
 ```bash
 # 构建后端镜像
 cd backend
-docker build -t taskpm-backend:latest .
+docker build -t asynqhub-backend:latest .
 
 # 构建 Worker 镜像
 cd ../worker-simulator
-docker build -t taskpm-worker:latest .
+docker build -t asynqhub-worker:latest .
 ```
 
 ### 2. 推送镜像到镜像仓库
 
 ```bash
 # 标记并推送到你的镜像仓库
-docker tag taskpm-backend:latest your-registry.com/taskpm-backend:latest
-docker push your-registry.com/taskpm-backend:latest
+docker tag asynqhub-backend:latest your-registry.com/asynqhub-backend:latest
+docker push your-registry.com/asynqhub-backend:latest
 
-docker tag taskpm-worker:latest your-registry.com/taskpm-worker:latest
-docker push your-registry.com/taskpm-worker:latest
+docker tag asynqhub-worker:latest your-registry.com/asynqhub-worker:latest
+docker push your-registry.com/asynqhub-worker:latest
 ```
 
 ### 3. 更新镜像地址
@@ -54,40 +54,40 @@ docker push your-registry.com/taskpm-worker:latest
 ```yaml
 stringData:
   REDIS_ADDR: "redis://your-redis-host:6379/0"
-  POSTGRES_DSN: "postgresql://user:password@your-pg-host:5432/taskpm?sslmode=disable"
+  POSTGRES_DSN: "postgresql://user:password@your-pg-host:5432/asynqhub?sslmode=disable"
 ```
 
 ### 5. 部署到开发环境
 
 ```bash
 # 创建 namespace
-kubectl create namespace taskpm-dev
+kubectl create namespace asynqhub-dev
 
 # 部署
 kubectl apply -k k8s/overlays/dev
 
 # 查看部署状态
-kubectl get pods -n taskpm-dev
+kubectl get pods -n asynqhub-dev
 ```
 
 ### 6. 部署到生产环境
 
 ```bash
 # 创建 namespace
-kubectl create namespace taskpm-prod
+kubectl create namespace asynqhub-prod
 
 # 部署
 kubectl apply -k k8s/overlays/prod
 
 # 查看部署状态
-kubectl get pods -n taskpm-prod
+kubectl get pods -n asynqhub-prod
 ```
 
 ### 7. 访问服务
 
 ```bash
 # 端口转发到本地访问
-kubectl port-forward -n taskpm-dev svc/taskpm-backend 28080:28080
+kubectl port-forward -n asynqhub-dev svc/asynqhub-backend 28080:28080
 ```
 
 ---
@@ -101,7 +101,7 @@ kubectl port-forward -n taskpm-dev svc/taskpm-backend 28080:28080
 ```yaml
 backend:
   image:
-    repository: your-registry.com/taskpm-backend
+    repository: your-registry.com/asynqhub-backend
     tag: "latest"
   
   replicaCount: 3
@@ -114,12 +114,12 @@ backend:
   postgres:
     host: your-pg-host
     port: 5432
-    database: taskpm
+    database: asynqhub
     username: postgres
 
 worker:
   image:
-    repository: your-registry.com/taskpm-worker
+    repository: your-registry.com/asynqhub-worker
     tag: "latest"
   
   replicaCount: 2
@@ -137,14 +137,14 @@ worker:
 
 ```bash
 # 安装到开发环境
-helm install taskpm ./helm/taskpm \
-  --namespace taskpm-dev \
+helm install asynqhub ./helm/asynq-hub \
+  --namespace asynqhub-dev \
   --create-namespace \
   --values values-custom.yaml
 
 # 安装到生产环境
-helm install taskpm ./helm/taskpm \
-  --namespace taskpm-prod \
+helm install asynqhub ./helm/asynq-hub \
+  --namespace asynqhub-prod \
   --create-namespace \
   --values values-custom.yaml \
   --set backend.replicaCount=5 \
@@ -155,25 +155,25 @@ helm install taskpm ./helm/taskpm \
 
 ```bash
 # 查看 release 状态
-helm status taskpm -n taskpm-dev
+helm status asynqhub -n asynqhub-dev
 
 # 查看 pods
-kubectl get pods -n taskpm-dev
+kubectl get pods -n asynqhub-dev
 ```
 
 ### 4. 更新部署
 
 ```bash
 # 更新配置
-helm upgrade taskpm ./helm/taskpm \
-  --namespace taskpm-dev \
+helm upgrade asynqhub ./helm/asynq-hub \
+  --namespace asynqhub-dev \
   --values values-custom.yaml
 ```
 
 ### 5. 卸载
 
 ```bash
-helm uninstall taskpm -n taskpm-dev
+helm uninstall asynqhub -n asynqhub-dev
 ```
 
 ---
@@ -184,10 +184,10 @@ helm uninstall taskpm -n taskpm-dev
 
 ```bash
 # 存活检查
-kubectl exec -it -n taskpm-dev deployment/taskpm-backend -- wget -qO- http://localhost:28080/healthz
+kubectl exec -it -n asynqhub-dev deployment/asynqhub-backend -- wget -qO- http://localhost:28080/healthz
 
 # 就绪检查
-kubectl exec -it -n taskpm-dev deployment/taskpm-backend -- wget -qO- http://localhost:28080/readyz
+kubectl exec -it -n asynqhub-dev deployment/asynqhub-backend -- wget -qO- http://localhost:28080/readyz
 ```
 
 ---
@@ -198,10 +198,10 @@ kubectl exec -it -n taskpm-dev deployment/taskpm-backend -- wget -qO- http://loc
 
 ```bash
 # 查看 HPA 状态
-kubectl get hpa -n taskpm-dev
+kubectl get hpa -n asynqhub-dev
 
 # 查看详细信息
-kubectl describe hpa taskpm-backend -n taskpm-dev
+kubectl describe hpa asynqhub-backend -n asynqhub-dev
 ```
 
 ---
@@ -212,22 +212,22 @@ kubectl describe hpa taskpm-backend -n taskpm-dev
 
 ```bash
 # 后端日志
-kubectl logs -f -n taskpm-dev deployment/taskpm-backend
+kubectl logs -f -n asynqhub-dev deployment/asynqhub-backend
 
 # Worker 日志
-kubectl logs -f -n taskpm-dev deployment/taskpm-worker
+kubectl logs -f -n asynqhub-dev deployment/asynqhub-worker
 ```
 
 ### 查看事件
 
 ```bash
-kubectl get events -n taskpm-dev --sort-by='.lastTimestamp'
+kubectl get events -n asynqhub-dev --sort-by='.lastTimestamp'
 ```
 
 ### 进入容器调试
 
 ```bash
-kubectl exec -it -n taskpm-dev deployment/taskpm-backend -- sh
+kubectl exec -it -n asynqhub-dev deployment/asynqhub-backend -- sh
 ```
 
 ---
@@ -238,14 +238,14 @@ kubectl exec -it -n taskpm-dev deployment/taskpm-backend -- sh
 
 ```bash
 kubectl delete -k k8s/overlays/dev
-kubectl delete namespace taskpm-dev
+kubectl delete namespace asynqhub-dev
 ```
 
 ### 清理 Helm 部署
 
 ```bash
-helm uninstall taskpm -n taskpm-dev
-kubectl delete namespace taskpm-dev
+helm uninstall asynqhub -n asynqhub-dev
+kubectl delete namespace asynqhub-dev
 ```
 
 ---

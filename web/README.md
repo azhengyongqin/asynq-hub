@@ -1,6 +1,6 @@
-# TaskPM Web UI
+# Asynq-Hub Web UI
 
-这是 TaskPM 的可选 Web 管理界面，基于 React 和 shadcn/ui 构建。
+这是 Asynq-Hub 的可选 Web 管理界面，基于 React 和 shadcn/ui 构建。
 
 ## 功能特性
 
@@ -24,7 +24,7 @@ pnpm build
 
 ## 说明
 
-此 Web UI 是可选的，TaskPM 核心功能通过 API 提供。您可以：
+此 Web UI 是可选的，Asynq-Hub 核心功能通过 API 提供。您可以：
 
 1. 使用此 Web UI 进行可视化管理
 2. 直接调用 HTTP API

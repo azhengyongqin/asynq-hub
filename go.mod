@@ -1,4 +1,4 @@
-module github.com/azhengyongqin/taskpm
+module github.com/azhengyongqin/asynq-hub
 
 go 1.25
 

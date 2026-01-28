@@ -16,12 +16,12 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	asynqx "github.com/azhengyongqin/taskpm/internal/queue"
-	"github.com/azhengyongqin/taskpm/internal/healthcheck"
-	"github.com/azhengyongqin/taskpm/internal/middleware"
-	"github.com/azhengyongqin/taskpm/internal/model"
-	"github.com/azhengyongqin/taskpm/internal/repository"
-	"github.com/azhengyongqin/taskpm/internal/worker"
+	"github.com/azhengyongqin/asynq-hub/internal/healthcheck"
+	"github.com/azhengyongqin/asynq-hub/internal/middleware"
+	"github.com/azhengyongqin/asynq-hub/internal/model"
+	asynqx "github.com/azhengyongqin/asynq-hub/internal/queue"
+	"github.com/azhengyongqin/asynq-hub/internal/repository"
+	workers "github.com/azhengyongqin/asynq-hub/internal/worker"
 )
 
 type Deps struct {
@@ -42,7 +42,7 @@ type Deps struct {
 }
 
 // NewRouter 提供 Gin HTTP API
-// @title TaskPM API
+// @title Asynq-Hub API
 // @version 1.0.0
 // @description 分布式任务管理系统 API
 // @BasePath /api/v1
@@ -1054,11 +1054,11 @@ func NewRouter(deps Deps) http.Handler {
 		} else {
 			// 创建文件服务器
 			fileServer := http.FileServer(http.FS(distFS))
-			
+
 			// 使用 NoRoute 来处理所有未匹配的路由，提供 SPA 支持
 			r.NoRoute(func(c *gin.Context) {
 				path := c.Request.URL.Path
-				
+
 				// 尝试打开文件
 				f, err := distFS.Open(strings.TrimPrefix(path, "/"))
 				if err == nil {
@@ -1067,12 +1067,12 @@ func NewRouter(deps Deps) http.Handler {
 					fileServer.ServeHTTP(c.Writer, c.Request)
 					return
 				}
-				
+
 				// 文件不存在，返回 index.html（SPA 路由支持）
 				c.Request.URL.Path = "/"
 				fileServer.ServeHTTP(c.Writer, c.Request)
 			})
-			
+
 			log.Printf("✅ Web UI 已挂载到根路径 /")
 		}
 	}

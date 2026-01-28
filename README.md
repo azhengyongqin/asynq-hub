@@ -1,4 +1,4 @@
-# TaskPM
+# Asynq-Hub
 
 <div align="center">
 
@@ -47,8 +47,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/azhengyongqin/taskpm.git
-cd taskpm
+git clone https://github.com/azhengyongqin/asynq-hub.git
+cd asynq-hub
 
 # 安装依赖
 go mod download
@@ -91,7 +91,7 @@ make run-example
        │ 创建任务
        ↓
 ┌─────────────┐      ┌─────────────┐
-│  TaskPM     │←────→│   Redis     │
+│  Asynq-Hub  │←────→│   Redis     │
 │  Server     │      │   (队列)     │
 └──────┬──────┘      └─────────────┘
        │
@@ -104,7 +104,7 @@ make run-example
 
 ### 核心组件
 
-1. **TaskPM Server**:
+1. **Asynq-Hub Server**:
    - RESTful API 服务
    - 任务调度和管理
    - Worker 注册和心跳
@@ -157,7 +157,7 @@ import (
     "encoding/json"
     "log"
     
-    "github.com/azhengyongqin/taskpm/sdk"
+    "github.com/azhengyongqin/asynq-hub/sdk"
 )
 
 func main() {
@@ -280,7 +280,7 @@ worker.Start(ctx)
 docker-compose up -d
 
 # 查看日志
-docker-compose logs -f taskpm
+docker-compose logs -f asynqhub
 
 # 停止服务
 docker-compose down
@@ -303,7 +303,7 @@ kubectl apply -k deployments/k8s/overlays/dev
 kubectl apply -k deployments/k8s/overlays/prod
 
 # 查看部署状态
-kubectl get pods -n taskpm
+kubectl get pods -n asynqhub
 ```
 
 ### Helm
@@ -312,17 +312,17 @@ kubectl get pods -n taskpm
 
 ```bash
 # 安装
-helm install taskpm deployments/helm/taskpm \
-  -f deployments/helm/taskpm/values.yaml \
-  --namespace taskpm \
+helm install asynqhub deployments/helm/asynq-hub \
+  -f deployments/helm/asynq-hub/values.yaml \
+  --namespace asynqhub \
   --create-namespace
 
 # 升级
-helm upgrade taskpm deployments/helm/taskpm \
-  -f deployments/helm/taskpm/values.yaml
+helm upgrade asynqhub deployments/helm/asynq-hub \
+  -f deployments/helm/asynq-hub/values.yaml
 
 # 卸载
-helm uninstall taskpm -n taskpm
+helm uninstall asynqhub -n asynqhub
 ```
 
 ### 二进制部署
@@ -362,9 +362,9 @@ make build-all
 ## 🏗️ 项目结构
 
 ```
-taskpm/
+asynq-hub/
 ├── cmd/              # 可执行程序
-│   ├── server/      # TaskPM 服务端
+│   ├── server/      # Asynq-Hub 服务端
 │   └── example/     # Worker 示例
 ├── sdk/             # Worker SDK
 ├── internal/        # 内部包
@@ -475,7 +475,7 @@ pnpm prisma migrate status
 
 ### 贡献者
 
-感谢所有为 TaskPM 做出贡献的开发者！
+感谢所有为 Asynq-Hub 做出贡献的开发者！
 
 <!-- ALL-CONTRIBUTORS-LIST:START -->
 <!-- 贡献者列表将自动更新 -->
@@ -491,21 +491,21 @@ pnpm prisma migrate status
 - [API 文档](http://localhost:28080/swagger/index.html)
 - [贡献指南](CONTRIBUTING.md)
 - [更新日志](CHANGELOG.md)
-- [问题反馈](https://github.com/azhengyongqin/taskpm/issues)
+- [问题反馈](https://github.com/azhengyongqin/asynq-hub/issues)
 
 ## 📞 联系我们
 
-- 提交 Issue: [GitHub Issues](https://github.com/azhengyongqin/taskpm/issues)
-- 讨论交流: [GitHub Discussions](https://github.com/azhengyongqin/taskpm/discussions)
+- 提交 Issue: [GitHub Issues](https://github.com/azhengyongqin/asynq-hub/issues)
+- 讨论交流: [GitHub Discussions](https://github.com/azhengyongqin/asynq-hub/discussions)
 
 ## ⭐ Star History
 
 如果这个项目对您有帮助，请给我们一个 Star！
 
-[![Star History Chart](https://api.star-history.com/svg?repos=azhengyongqin/taskpm&type=Date)](https://star-history.com/#azhengyongqin/taskpm&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=azhengyongqin/asynq-hub&type=Date)](https://star-history.com/#azhengyongqin/asynq-hub&Date)
 
 ---
 
 <div align="center">
-Made with ❤️ by TaskPM Team
+Made with ❤️ by Asynq-Hub Team
 </div>

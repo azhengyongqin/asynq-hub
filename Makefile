@@ -64,8 +64,8 @@ clean: ## 清理编译产物
 	rm -f coverage.out coverage.html
 
 docker-build: ## 构建 Docker 镜像
-	docker build -t taskpm-server:latest -f deployments/docker/Dockerfile.server .
-	docker build -t taskpm-example:latest -f deployments/docker/Dockerfile.example .
+	docker build -t asynqhub-server:latest -f deployments/docker/Dockerfile.server .
+	docker build -t asynqhub-example:latest -f deployments/docker/Dockerfile.example .
 
 docker-compose-up: ## 启动本地开发环境
 	docker-compose up -d
@@ -98,13 +98,13 @@ k8s-deploy-prod: ## 部署到 K8s 生产环境
 	kubectl apply -k deployments/k8s/overlays/prod
 
 helm-install-dev: ## 使用 Helm 安装到开发环境
-	helm install taskpm deployments/helm/taskpm -f deployments/helm/taskpm/values.yaml --namespace taskpm-dev --create-namespace
+	helm install asynqhub deployments/helm/asynq-hub -f deployments/helm/asynq-hub/values.yaml --namespace asynqhub-dev --create-namespace
 
 helm-upgrade: ## 使用 Helm 升级
-	helm upgrade taskpm deployments/helm/taskpm -f deployments/helm/taskpm/values.yaml --namespace taskpm-dev
+	helm upgrade asynqhub deployments/helm/asynq-hub -f deployments/helm/asynq-hub/values.yaml --namespace asynqhub-dev
 
 helm-uninstall: ## 卸载 Helm release
-	helm uninstall taskpm --namespace taskpm-dev
+	helm uninstall asynqhub --namespace asynqhub-dev
 
 tag: ## 创建 Git 标签
 	@read -p "Enter tag version (e.g., v1.0.0): " tag; \

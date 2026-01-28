@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/azhengyongqin/taskpm/internal/metrics"
+	"github.com/azhengyongqin/asynq-hub/internal/metrics"
 )
 
 // PrometheusMiddleware 记录 HTTP 请求指标

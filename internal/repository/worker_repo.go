@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/azhengyongqin/taskpm/internal/worker"
+	workers "github.com/azhengyongqin/asynq-hub/internal/worker"
 )
 
 type WorkerRepo struct {

@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "taskpm.backend.fullname" . }}
+  name: {{ include "asynqhub.backend.fullname" . }}
   labels:
-    {{- include "taskpm.labels" . | nindent 4 }}
+    {{- include "asynqhub.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
 spec:
   type: {{ .Values.backend.service.type }}
@@ -17,5 +17,5 @@ spec:
     targetPort: grpc
     protocol: TCP
   selector:
-    {{- include "taskpm.selectorLabels" . | nindent 4 }}
+    {{- include "asynqhub.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: backend

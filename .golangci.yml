@@ -1,0 +1,66 @@
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+  goconst:
+    min-len: 2
+    min-occurrences: 3
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  gocyclo:
+    min-complexity: 15
+  goimports:
+    local-prefixes: dagneoai-task-pm
+  revive:
+    rules:
+      - name: unexported-return
+        disabled: true
+  govet:
+    enable-all: true
+  misspell:
+    locale: US
+  nolintlint:
+    allow-unused: false
+    require-explanation: true
+    require-specific: true
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - goconst
+    - gocyclo
+    - gofmt
+    - goimports
+    - misspell
+    - revive
+    - unconvert
+    - unparam
+    - nolintlint
+
+issues:
+  exclude-dirs:
+    - vendor
+  exclude-files:
+    - ".*\\.pb\\.go$"
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+
+run:
+  timeout: 5m
+  go: '1.25'

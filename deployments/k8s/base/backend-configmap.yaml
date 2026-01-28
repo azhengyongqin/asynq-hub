@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskpm-backend-config
+  labels:
+    app: taskpm-backend
+data:
+  HTTP_ADDR: ":28080"
+  GRPC_ADDR: ":29090"

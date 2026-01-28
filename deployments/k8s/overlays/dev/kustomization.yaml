@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: taskpm-dev
+
+bases:
+- ../../base
+
+patchesStrategicMerge:
+- |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: taskpm-backend
+  spec:
+    replicas: 1
+- |-
+  apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    name: taskpm-backend-hpa
+  spec:
+    minReplicas: 1
+    maxReplicas: 3
+
+commonLabels:
+  environment: dev

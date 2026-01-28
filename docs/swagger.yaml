@@ -1,0 +1,792 @@
+basePath: /api/v1
+definitions:
+  dto.BatchRetryRequest:
+    properties:
+      limit:
+        example: 100
+        type: integer
+      status:
+        example: fail
+        type: string
+      task_ids:
+        items:
+          type: string
+        type: array
+      worker_name:
+        example: my-worker
+        type: string
+    type: object
+  dto.BatchRetryResponse:
+    properties:
+      new_task_ids:
+        items:
+          type: string
+        type: array
+      status:
+        example: ok
+        type: string
+      total_retried:
+        example: 10
+        type: integer
+    type: object
+  dto.ClearDeadQueueRequest:
+    properties:
+      queue_name:
+        example: default
+        type: string
+      worker_name:
+        example: my-worker
+        type: string
+    required:
+    - worker_name
+    type: object
+  dto.ClearDeadQueueResponse:
+    properties:
+      cleared_queues:
+        items:
+          type: string
+        type: array
+      status:
+        example: ok
+        type: string
+      total_deleted:
+        example: 50
+        type: integer
+      worker_name:
+        example: my-worker
+        type: string
+    type: object
+  dto.ClearQueueRequest:
+    properties:
+      queue_name:
+        example: default
+        type: string
+      worker_name:
+        example: my-worker
+        type: string
+    required:
+    - worker_name
+    type: object
+  dto.ClearQueueResponse:
+    properties:
+      cleared_queues:
+        items:
+          type: string
+        type: array
+      status:
+        example: ok
+        type: string
+      total_deleted:
+        example: 100
+        type: integer
+      worker_name:
+        example: my-worker
+        type: string
+    type: object
+  dto.CreateTaskRequest:
+    type: object
+  dto.CreateTaskResponse:
+    properties:
+      asynq_task_id:
+        type: string
+      queue:
+        example: default
+        type: string
+      status:
+        example: pending
+        type: string
+      task_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      worker_name:
+        example: my-worker
+        type: string
+    type: object
+  dto.CreateWorkerRequest:
+    properties:
+      base_url:
+        example: http://localhost:8080
+        type: string
+      concurrency:
+        example: 10
+        minimum: 1
+        type: integer
+      default_delay:
+        example: 0
+        type: integer
+      default_retry_count:
+        example: 3
+        type: integer
+      default_timeout:
+        example: 30
+        type: integer
+      queues:
+        additionalProperties:
+          type: integer
+        type: object
+      redis_addr:
+        example: redis://localhost:6379/0
+        type: string
+      worker_name:
+        example: my-worker
+        type: string
+    required:
+    - concurrency
+    - queues
+    - worker_name
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        example: 错误信息
+        type: string
+    type: object
+  dto.HeartbeatResponse:
+    properties:
+      heartbeat_at:
+        type: string
+      status:
+        example: ok
+        type: string
+      worker_name:
+        example: my-worker
+        type: string
+    type: object
+  dto.QueueStatsResponse:
+    properties:
+      queues:
+        items: {}
+        type: array
+      worker_name:
+        example: my-worker
+        type: string
+    type: object
+  dto.RegisterWorkerRequest:
+    properties:
+      base_url:
+        example: http://localhost:8080
+        type: string
+      concurrency:
+        example: 10
+        minimum: 1
+        type: integer
+      default_delay:
+        example: 0
+        type: integer
+      default_retry_count:
+        example: 3
+        type: integer
+      default_timeout:
+        example: 30
+        type: integer
+      queues:
+        additionalProperties:
+          type: integer
+        type: object
+      redis_addr:
+        example: redis://localhost:6379/0
+        type: string
+      worker_name:
+        example: my-worker
+        type: string
+    required:
+    - concurrency
+    - queues
+    - worker_name
+    type: object
+  dto.ReplayTaskRequest:
+    properties:
+      delay:
+        example: 0
+        type: integer
+    type: object
+  dto.ReplayTaskResponse:
+    properties:
+      new_task_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
+  dto.ReportAttemptRequest:
+    type: object
+  dto.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        example: 操作成功
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
+  dto.TaskListResponse:
+    properties:
+      items: {}
+      total:
+        type: integer
+    type: object
+  dto.TaskResponse:
+    properties:
+      task: {}
+    type: object
+  dto.WorkerListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/workers.Config'
+        type: array
+    type: object
+  dto.WorkerResponse:
+    properties:
+      worker:
+        $ref: '#/definitions/workers.Config'
+    type: object
+  dto.WorkerStatsResponse:
+    properties:
+      stats: {}
+    type: object
+  dto.WorkerTimeSeriesResponse:
+    properties:
+      timeseries: {}
+    type: object
+  healthcheck.CheckResult:
+    properties:
+      checks:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        description: '"ok" or "error"'
+        type: string
+      version:
+        type: string
+    type: object
+  workers.Config:
+    properties:
+      base_url:
+        type: string
+      concurrency:
+        type: integer
+      default_delay:
+        description: seconds
+        type: integer
+      default_retry_count:
+        type: integer
+      default_timeout:
+        description: seconds
+        type: integer
+      is_enabled:
+        type: boolean
+      last_heartbeat_at:
+        type: string
+      queues:
+        additionalProperties:
+          type: integer
+        description: queue_name -> weight
+        type: object
+      redis_addr:
+        type: string
+      worker_name:
+        type: string
+    type: object
+host: localhost:28080
+info:
+  contact:
+    name: TaskPM Support
+  description: 分布式任务管理系统 - 基于 Asynq 和 PostgreSQL 的任务调度平台
+  license:
+    name: MIT
+  title: TaskPM API
+  version: 1.0.0
+paths:
+  /api/v1/workers:
+    get:
+      description: 获取所有已注册的 Worker 配置列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.WorkerListResponse'
+      summary: 获取 Worker 列表
+      tags:
+      - Workers
+    post:
+      consumes:
+      - application/json
+      description: 创建新的 Worker 或更新已存在的 Worker 配置
+      parameters:
+      - description: Worker 配置
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateWorkerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.WorkerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 创建或更新 Worker
+      tags:
+      - Workers
+  /api/v1/workers/{worker_name}:
+    get:
+      description: 根据 worker_name 获取 Worker 配置详情
+      parameters:
+      - description: Worker 名称
+        in: path
+        name: worker_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.WorkerResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 获取 Worker 详情
+      tags:
+      - Workers
+  /api/v1/workers/{worker_name}/heartbeat:
+    post:
+      description: 更新指定 Worker 的心跳时间
+      parameters:
+      - description: Worker 名称
+        in: path
+        name: worker_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HeartbeatResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 更新 Worker 心跳
+      tags:
+      - Workers
+  /api/v1/workers/{worker_name}/stats:
+    get:
+      description: 获取指定 Worker 的任务统计信息
+      parameters:
+      - description: Worker 名称
+        in: path
+        name: worker_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.WorkerStatsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 获取 Worker 统计信息
+      tags:
+      - Workers
+  /api/v1/workers/{worker_name}/timeseries:
+    get:
+      description: 获取指定 Worker 的时间序列统计数据
+      parameters:
+      - description: Worker 名称
+        in: path
+        name: worker_name
+        required: true
+        type: string
+      - default: 24
+        description: 统计小时数
+        in: query
+        name: hours
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.WorkerTimeSeriesResponse'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 获取 Worker 时间序列统计
+      tags:
+      - Workers
+  /api/v1/workers/register:
+    post:
+      consumes:
+      - application/json
+      description: Worker SDK 自动注册接口
+      parameters:
+      - description: Worker 注册信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterWorkerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.WorkerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 注册 Worker
+      tags:
+      - Workers
+  /healthz:
+    get:
+      description: 服务存活检查，用于 Kubernetes liveness probe
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/healthcheck.CheckResult'
+      summary: Liveness 检查
+      tags:
+      - Health
+  /queues/clear:
+    post:
+      consumes:
+      - application/json
+      description: 清空指定 Worker 的队列（删除所有待处理任务）
+      parameters:
+      - description: 清空队列请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ClearQueueRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ClearQueueResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 清空队列
+      tags:
+      - Queues
+  /queues/clear-dead:
+    post:
+      consumes:
+      - application/json
+      description: 清空指定 Worker 的死信队列（已达最大重试次数的失败任务）
+      parameters:
+      - description: 清空死信队列请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ClearDeadQueueRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ClearDeadQueueResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 清空死信队列
+      tags:
+      - Queues
+  /queues/stats:
+    get:
+      description: 获取指定 Worker 的所有队列状态统计
+      parameters:
+      - description: Worker 名称
+        in: query
+        name: worker_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.QueueStatsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 查询队列状态
+      tags:
+      - Queues
+  /readyz:
+    get:
+      description: 服务就绪检查，检查依赖服务（PostgreSQL、Redis）状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/healthcheck.CheckResult'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/healthcheck.CheckResult'
+      summary: Readiness 检查
+      tags:
+      - Health
+  /tasks:
+    get:
+      description: 分页查询任务列表，支持多条件过滤
+      parameters:
+      - description: Worker 名称
+        in: query
+        name: worker_name
+        type: string
+      - description: 任务状态
+        in: query
+        name: status
+        type: string
+      - description: 队列名称
+        in: query
+        name: queue
+        type: string
+      - default: 50
+        description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TaskListResponse'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 查询任务列表
+      tags:
+      - Tasks
+    post:
+      consumes:
+      - application/json
+      description: 创建新的异步任务并入队到 Asynq
+      parameters:
+      - description: 任务创建请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CreateTaskResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 创建任务
+      tags:
+      - Tasks
+  /tasks/{task_id}:
+    get:
+      description: 根据 task_id 获取任务详细信息及执行历史
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TaskResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 获取任务详情
+      tags:
+      - Tasks
+  /tasks/{task_id}/replay:
+    post:
+      consumes:
+      - application/json
+      description: 将已完成或失败的任务重新入队执行
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: 重放参数
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/dto.ReplayTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReplayTaskResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 重放任务
+      tags:
+      - Tasks
+  /tasks/{task_id}/report-attempt:
+    post:
+      consumes:
+      - application/json
+      description: Worker 上报任务执行的详细状态（running、success、fail）
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: 执行状态
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReportAttemptRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 上报任务执行状态
+      tags:
+      - Tasks
+  /tasks/batch-retry:
+    post:
+      consumes:
+      - application/json
+      description: 批量重试指定条件的失败任务
+      parameters:
+      - description: 重试条件
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BatchRetryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BatchRetryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 批量重试失败任务
+      tags:
+      - Tasks
+schemes:
+- http
+- https
+swagger: "2.0"

@@ -1,0 +1,89 @@
+// Prisma Schema 定义
+// 任务管理系统 - 基于 Asynq + PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Worker 配置表
+// 存储每个 worker 的注册信息和配置
+model Worker {
+  id                BigInt    @id @default(autoincrement())
+  workerName        String    @unique @map("worker_name") @db.Text
+  baseUrl           String?   @map("base_url") @db.Text
+  redisAddr         String?   @map("redis_addr") @db.Text
+  concurrency       Int       @default(10)
+  queues            Json      @db.JsonB // {"queue_name": weight}
+  defaultRetryCount Int       @default(3) @map("default_retry_count")
+  defaultTimeout    Int       @default(30) @map("default_timeout") // seconds
+  defaultDelay      Int       @default(0) @map("default_delay") // seconds
+  isEnabled         Boolean   @default(true) @map("is_enabled")
+  lastHeartbeatAt   DateTime? @map("last_heartbeat_at") @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // 关联到任务表
+  tasks Task[]
+
+  @@index([isEnabled], map: "idx_worker_enabled")
+  @@index([lastHeartbeatAt], map: "idx_worker_heartbeat")
+  @@map("worker")
+}
+
+// 任务记录表
+// 用于分析统计，记录每个任务的状态和执行情况
+model Task {
+  id             BigInt   @id @default(autoincrement())
+  taskId         String   @unique @map("task_id") @db.Text
+  workerName     String   @map("worker_name") @db.Text
+  queue          String   @db.Text // 格式: "workerName:queue_name"
+  priority       Int      @default(0)
+  payload        Json     @db.JsonB
+  status         String   @db.Text // pending/running/success/fail/dead
+  lastAttempt    Int      @default(0) @map("last_attempt")
+  lastError      String?  @map("last_error") @db.Text
+  lastWorkerName String?  @map("last_worker_name") @db.Text // 执行的 worker 实例
+  traceId        String?  @map("trace_id") @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // 关联到 Worker
+  worker Worker @relation(fields: [workerName], references: [workerName])
+
+  // 关联到执行尝试记录
+  attempts TaskAttempt[]
+
+  @@index([workerName, createdAt(sort: Desc)], map: "idx_task_worker_created_at")
+  @@index([status, updatedAt(sort: Desc)], map: "idx_task_status_updated_at")
+  @@index([queue, updatedAt(sort: Desc)], map: "idx_task_queue_updated_at")
+  @@map("task")
+}
+
+// 任务执行尝试记录表
+// 记录每次任务执行的详细信息（包括重试）
+model TaskAttempt {
+  id          BigInt    @id @default(autoincrement())
+  taskId      String    @map("task_id") @db.Text
+  asynqTaskId String?   @map("asynq_task_id") @db.Text
+  attempt     Int
+  status      String    @db.Text // running/success/fail/dead
+  startedAt   DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  finishedAt  DateTime? @map("finished_at") @db.Timestamptz(6)
+  durationMs  Int?      @map("duration_ms")
+  error       String?   @db.Text
+  workerName  String?   @map("worker_name") @db.Text
+  traceId     String?   @map("trace_id") @db.Text
+  spanId      String?   @map("span_id") @db.Text
+
+  // 关联到任务表
+  task Task @relation(fields: [taskId], references: [taskId])
+
+  @@index([taskId, startedAt(sort: Desc)], map: "idx_attempt_task_key_started_at")
+  @@index([status, startedAt(sort: Desc)], map: "idx_attempt_status_started_at")
+  @@map("task_attempt")
+}

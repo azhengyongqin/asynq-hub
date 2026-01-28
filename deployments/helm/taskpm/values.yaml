@@ -1,0 +1,134 @@
+# ========================================
+# Global Settings
+# ========================================
+nameOverride: ""
+fullnameOverride: ""
+
+# ========================================
+# Image Settings
+# ========================================
+backend:
+  image:
+    repository: taskpm-backend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  replicaCount: 2
+  
+  service:
+    type: ClusterIP
+    httpPort: 28080
+    grpcPort: 29090
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  config:
+    httpAddr: ":28080"
+    grpcAddr: ":29090"
+  
+  # External dependencies
+  redis:
+    host: taskpm-redis
+    port: 6379
+    database: 0
+  
+  postgres:
+    host: taskpm-postgres
+    port: 5432
+    database: taskpm
+    username: postgres
+    # password should be set via secret
+
+worker:
+  image:
+    repository: taskpm-worker
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  replicaCount: 1
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  config:
+    workerName: "worker-1"
+    baseURL: "http://taskpm-backend:28080"
+  
+  redis:
+    host: taskpm-redis
+    port: 6379
+    database: 0
+
+# ========================================
+# Ingress Settings
+# ========================================
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: taskpm.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  # - secretName: taskpm-tls
+  #   hosts:
+  #     - taskpm.example.com
+
+# ========================================
+# Security Settings
+# ========================================
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+
+# ========================================
+# Service Account
+# ========================================
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# ========================================
+# Node Selection
+# ========================================
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,12 @@
+{
+  "name": "dagenoai-task-pm",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "prisma": "^7.3.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  }
+}

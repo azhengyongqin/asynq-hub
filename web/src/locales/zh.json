@@ -1,0 +1,138 @@
+{
+  "app": {
+    "title": "TaskPM",
+    "subtitle": "DagenoAI Task Manager",
+    "version": "v0.1.0 (MVP)"
+  },
+  "nav": {
+    "platform": "平台",
+    "workers": "Workers",
+    "tasks": "任务"
+  },
+  "workers": {
+    "title": "Workers",
+    "subtitle": "Worker 配置与任务执行统计",
+    "refresh": "刷新",
+    "selectWorker": "选择 Worker...",
+    "searchPlaceholder": "搜索 Worker...",
+    "noWorkerFound": "未找到 Worker",
+    "noWorkerSelected": "请从上方下拉框选择一个 Worker 查看详情",
+    "noWorkers": "暂无 Worker",
+    "noWorkersHint": "启动 worker 以自动注册到控制平面",
+    "error": "错误",
+    "requestFailed": "请求失败",
+    "unknownError": "未知错误",
+    "fetchStatsFailed": "获取统计信息失败",
+    "active": "Active",
+    "disabled": "Disabled",
+    "config": {
+      "concurrency": "并发数",
+      "retryCount": "重试次数",
+      "timeout": "超时时间",
+      "queues": "队列配置",
+      "lastHeartbeat": "最后心跳"
+    },
+    "stats": {
+      "totalTasks": "总任务数",
+      "successRate": "成功率",
+      "avgDuration": "平均耗时",
+      "avgDurationHint": "基于成功任务统计",
+      "deadTasks": "异常任务",
+      "deadTasksHint": "超过最大重试次数",
+      "taskDistribution": "任务状态分布",
+      "taskDistributionSubtitle": "各状态任务数量占比",
+      "queuePerformance": "队列性能统计",
+      "queuePerformanceSubtitle": "各队列执行情况",
+      "taskTrend": "任务执行趋势（最近24小时）",
+      "taskTrendSubtitle": "按小时统计的成功/失败任务数",
+      "throughput": "吞吐",
+      "avgDurationLabel": "平均耗时",
+      "running": "运行中",
+      "waiting": "等待",
+      "success": "成功",
+      "fail": "失败",
+      "tasks": "个任务",
+      "average": "平均"
+    },
+    "status": {
+      "success": "成功",
+      "pending": "等待中",
+      "running": "执行中",
+      "fail": "失败",
+      "dead": "已死亡"
+    }
+  },
+  "tasks": {
+    "title": "任务监控",
+    "filters": {
+      "workerName": "Worker 名称",
+      "allWorkers": "全部 Workers",
+      "status": "状态",
+      "allStatus": "全部状态",
+      "queue": "队列",
+      "allQueues": "全部队列",
+      "reset": "重置"
+    },
+    "table": {
+      "taskId": "任务 ID",
+      "worker": "Worker",
+      "queue": "队列",
+      "status": "状态",
+      "execution": "执行信息",
+      "lastWorker": "最后执行节点",
+      "updated": "更新时间",
+      "priority": "优先级",
+      "attempts": "尝试次数"
+    },
+    "time": {
+      "justNow": "刚刚",
+      "minutesAgo": "{0}分钟前",
+      "hoursAgo": "{0}小时前",
+      "daysAgo": "{0}天前"
+    },
+    "pagination": {
+      "showing": "显示",
+      "of": "共",
+      "tasks": "个任务",
+      "rowsPerPage": "每页行数",
+      "prev": "上一页",
+      "next": "下一页",
+      "page": "第 {0} 页 / 共 {1} 页"
+    },
+    "empty": {
+      "title": "未找到任务",
+      "hint": "请调整筛选条件或检查 worker 是否正在运行"
+    },
+    "detail": {
+      "title": "任务详情",
+      "replayTask": "重新执行",
+      "workerName": "Worker 名称",
+      "status": "状态",
+      "queue": "队列",
+      "attempts": "尝试次数",
+      "priority": "优先级",
+      "lastWorkerInstance": "最后执行实例",
+      "lastError": "最后错误信息",
+      "noError": "未提供详细错误信息",
+      "taskPayload": "任务载荷",
+      "copyJson": "复制 JSON",
+      "copied": "已复制！",
+      "executionHistory": "执行历史",
+      "attempt": "尝试 #{0}",
+      "worker": "Worker",
+      "duration": "耗时",
+      "traceId": "追踪 ID",
+      "noHistory": "此任务没有执行历史记录",
+      "created": "创建时间",
+      "updated": "更新时间"
+    },
+    "actions": {
+      "refresh": "刷新"
+    }
+  },
+  "common": {
+    "loading": "加载中...",
+    "noData": "暂无数据",
+    "error": "错误"
+  }
+}

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskpm-worker-config
+  labels:
+    app: taskpm-worker
+data:
+  BASE_URL: "http://taskpm-backend:28080"
+  WORKER_NAME: "worker-1"

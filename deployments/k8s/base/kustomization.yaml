@@ -1,0 +1,17 @@
+gitapiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- backend-configmap.yaml
+- backend-secret.yaml
+- backend-deployment.yaml
+- backend-service.yaml
+- backend-hpa.yaml
+- worker-configmap.yaml
+- worker-secret.yaml
+- worker-deployment.yaml
+- worker-hpa.yaml
+
+commonLabels:
+  project: taskpm
+  managed-by: kustomize

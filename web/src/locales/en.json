@@ -1,0 +1,138 @@
+{
+  "app": {
+    "title": "TaskPM",
+    "subtitle": "DagenoAI Task Manager",
+    "version": "v0.1.0 (MVP)"
+  },
+  "nav": {
+    "platform": "Platform",
+    "workers": "Workers",
+    "tasks": "Tasks"
+  },
+  "workers": {
+    "title": "Workers",
+    "subtitle": "Worker Configuration and Task Execution Statistics",
+    "refresh": "Refresh",
+    "selectWorker": "Select Worker...",
+    "searchPlaceholder": "Search Worker...",
+    "noWorkerFound": "No Worker Found",
+    "noWorkerSelected": "Please select a Worker from the dropdown above to view details",
+    "noWorkers": "No Workers",
+    "noWorkersHint": "Start a worker to automatically register with the control plane",
+    "error": "Error",
+    "requestFailed": "Request failed",
+    "unknownError": "Unknown error",
+    "fetchStatsFailed": "Failed to fetch statistics",
+    "active": "Active",
+    "disabled": "Disabled",
+    "config": {
+      "concurrency": "Concurrency",
+      "retryCount": "Retry Count",
+      "timeout": "Timeout",
+      "queues": "Queue Configuration",
+      "lastHeartbeat": "Last Heartbeat"
+    },
+    "stats": {
+      "totalTasks": "Total Tasks",
+      "successRate": "Success Rate",
+      "avgDuration": "Avg Duration",
+      "avgDurationHint": "Based on successful tasks",
+      "deadTasks": "Dead Tasks",
+      "deadTasksHint": "Exceeded max retry count",
+      "taskDistribution": "Task Status Distribution",
+      "taskDistributionSubtitle": "Task count ratio by status",
+      "queuePerformance": "Queue Performance Statistics",
+      "queuePerformanceSubtitle": "Execution status by queue",
+      "taskTrend": "Task Execution Trend (Last 24 Hours)",
+      "taskTrendSubtitle": "Hourly success/failure task count",
+      "throughput": "Throughput",
+      "avgDurationLabel": "Avg Duration",
+      "running": "Running",
+      "waiting": "Waiting",
+      "success": "Success",
+      "fail": "Failed",
+      "tasks": "tasks",
+      "average": "Average"
+    },
+    "status": {
+      "success": "Success",
+      "pending": "Pending",
+      "running": "Running",
+      "fail": "Failed",
+      "dead": "Dead"
+    }
+  },
+  "tasks": {
+    "title": "Tasks Monitor",
+    "filters": {
+      "workerName": "Worker Name",
+      "allWorkers": "All Workers",
+      "status": "Status",
+      "allStatus": "All Status",
+      "queue": "Queue",
+      "allQueues": "All Queues",
+      "reset": "Reset"
+    },
+    "table": {
+      "taskId": "Task ID",
+      "worker": "Worker",
+      "queue": "Queue",
+      "status": "Status",
+      "execution": "Execution",
+      "lastWorker": "Last Worker",
+      "updated": "Updated",
+      "priority": "Priority",
+      "attempts": "Attempts"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{0}m ago",
+      "hoursAgo": "{0}h ago",
+      "daysAgo": "{0}d ago"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "of": "of",
+      "tasks": "tasks",
+      "rowsPerPage": "Rows per page",
+      "prev": "Prev",
+      "next": "Next",
+      "page": "Page {0} / {1}"
+    },
+    "empty": {
+      "title": "No tasks found",
+      "hint": "Try adjusting your filters or check if workers are running"
+    },
+    "detail": {
+      "title": "Task Detail",
+      "replayTask": "Replay Task",
+      "workerName": "Worker Name",
+      "status": "Status",
+      "queue": "Queue",
+      "attempts": "Attempts",
+      "priority": "Priority",
+      "lastWorkerInstance": "Last Worker Instance",
+      "lastError": "Last Error Message",
+      "noError": "No detailed error message provided",
+      "taskPayload": "Task Payload",
+      "copyJson": "Copy JSON",
+      "copied": "Copied!",
+      "executionHistory": "Execution History",
+      "attempt": "Attempt #{0}",
+      "worker": "Worker",
+      "duration": "Duration",
+      "traceId": "Trace ID",
+      "noHistory": "No execution history found for this task",
+      "created": "Created",
+      "updated": "Updated"
+    },
+    "actions": {
+      "refresh": "Refresh"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "noData": "No Data",
+    "error": "Error"
+  }
+}

@@ -1,0 +1,46 @@
+networks:
+  dagenoai-taskpm-network:
+    driver: bridge
+    name: dagenoai-taskpm-network
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "16379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./.volumes/redis:/data
+    networks:
+      - dagenoai-taskpm-network
+
+  postgres:
+    image: postgres:18-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: taskpm
+    ports:
+      - "15432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taskpm"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - ./.volumes/postgres:/var/lib/postgresql/data
+    networks:
+      - dagenoai-taskpm-network
+      
+  asynqmon:
+    image: hibiken/asynqmon:latest
+    restart: always
+    environment:
+      REDIS_ADDR: redis:6379
+    ports:
+      - "18080:8080"
+    depends_on:
+      - redis
+    networks:
+      - dagenoai-taskpm-network

@@ -101,7 +101,19 @@ func main() {
 		log.Fatalf("load workers: %v", err)
 	}
 	for _, c := range cfgs {
-		_, _ = workerStore.Upsert(c)
+		workerCfg := workers.Config{
+			WorkerName:        c.WorkerName,
+			BaseURL:           c.BaseURL,
+			RedisAddr:         c.RedisAddr,
+			Concurrency:       c.Concurrency,
+			Queues:            c.Queues,
+			DefaultRetryCount: c.DefaultRetryCount,
+			DefaultTimeout:    c.DefaultTimeout,
+			DefaultDelay:      c.DefaultDelay,
+			IsEnabled:         c.IsEnabled,
+			LastHeartbeatAt:   c.LastHeartbeatAt,
+		}
+		_, _ = workerStore.Upsert(workerCfg)
 	}
 	logger.S.Infof("已加载 %d 个 worker 配置", len(cfgs))
 

@@ -170,7 +170,7 @@ group by status
 			rows.Close()
 			return nil, err
 		}
-		
+
 		stats.TotalTasks += count
 
 		switch status {
@@ -259,4 +259,34 @@ order by hour asc
 	}
 
 	return result, rows.Err()
+}
+
+// ListFailedTasks 查询失败的任务列表（用于批量重试）
+func (r *TaskRepo) ListFailedTasks(ctx context.Context, workerName string, limit int) ([]Task, error) {
+	if limit <= 0 || limit > 1000 {
+		limit = 100
+	}
+
+	rows, err := r.pool.Query(ctx, `
+select task_id, worker_name, queue, priority, payload, status, last_attempt, coalesce(last_error,''), coalesce(last_worker_name,''), coalesce(trace_id,''), created_at, updated_at
+from task
+where status = 'fail'
+  and ($1='' or worker_name=$1)
+order by created_at desc
+limit $2
+`, workerName, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []Task
+	for rows.Next() {
+		var t Task
+		if err := rows.Scan(&t.TaskID, &t.WorkerName, &t.Queue, &t.Priority, &t.Payload, &t.Status, &t.LastAttempt, &t.LastError, &t.LastWorkerName, &t.TraceID, &t.CreatedAt, &t.UpdatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
 }

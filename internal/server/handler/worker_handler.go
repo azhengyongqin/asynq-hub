@@ -131,12 +131,21 @@ func (h *WorkerHandler) CreateOrUpdateWorker(c *gin.Context) {
 		return
 	}
 
+	// 转换队列组配置
+	queueGroups := make([]workers.QueueGroupConfig, len(req.QueueGroups))
+	for i, qg := range req.QueueGroups {
+		queueGroups[i] = workers.QueueGroupConfig{
+			Name:        qg.Name,
+			Concurrency: qg.Concurrency,
+			Priorities:  qg.Priorities,
+		}
+	}
+
 	config := workers.Config{
 		WorkerName:        req.WorkerName,
 		BaseURL:           req.BaseURL,
 		RedisAddr:         req.RedisAddr,
-		Concurrency:       req.Concurrency,
-		Queues:            req.Queues,
+		QueueGroups:       queueGroups,
 		DefaultRetryCount: req.DefaultRetryCount,
 		DefaultTimeout:    req.DefaultTimeout,
 		DefaultDelay:      req.DefaultDelay,
@@ -153,8 +162,7 @@ func (h *WorkerHandler) CreateOrUpdateWorker(c *gin.Context) {
 			WorkerName:        item.WorkerName,
 			BaseURL:           item.BaseURL,
 			RedisAddr:         item.RedisAddr,
-			Concurrency:       item.Concurrency,
-			Queues:            item.Queues,
+			QueueGroups:       convertToRepoQueueGroups(item.QueueGroups),
 			DefaultRetryCount: item.DefaultRetryCount,
 			DefaultTimeout:    item.DefaultTimeout,
 			DefaultDelay:      item.DefaultDelay,
@@ -245,13 +253,22 @@ func (h *WorkerHandler) RegisterWorker(c *gin.Context) {
 		return
 	}
 
+	// 转换队列组配置
+	queueGroups := make([]workers.QueueGroupConfig, len(req.QueueGroups))
+	for i, qg := range req.QueueGroups {
+		queueGroups[i] = workers.QueueGroupConfig{
+			Name:        qg.Name,
+			Concurrency: qg.Concurrency,
+			Priorities:  qg.Priorities,
+		}
+	}
+
 	now := time.Now()
 	config := workers.Config{
 		WorkerName:        req.WorkerName,
 		BaseURL:           req.BaseURL,
 		RedisAddr:         req.RedisAddr,
-		Concurrency:       req.Concurrency,
-		Queues:            req.Queues,
+		QueueGroups:       queueGroups,
 		DefaultRetryCount: req.DefaultRetryCount,
 		DefaultTimeout:    req.DefaultTimeout,
 		DefaultDelay:      req.DefaultDelay,
@@ -270,8 +287,7 @@ func (h *WorkerHandler) RegisterWorker(c *gin.Context) {
 			WorkerName:        item.WorkerName,
 			BaseURL:           item.BaseURL,
 			RedisAddr:         item.RedisAddr,
-			Concurrency:       item.Concurrency,
-			Queues:            item.Queues,
+			QueueGroups:       convertToRepoQueueGroups(item.QueueGroups),
 			DefaultRetryCount: item.DefaultRetryCount,
 			DefaultTimeout:    item.DefaultTimeout,
 			DefaultDelay:      item.DefaultDelay,
@@ -288,4 +304,17 @@ func (h *WorkerHandler) RegisterWorker(c *gin.Context) {
 		"status": "ok",
 		"worker": item,
 	})
+}
+
+// convertToRepoQueueGroups 将 workers.QueueGroupConfig 转换为 repository.QueueGroupConfig
+func convertToRepoQueueGroups(queueGroups []workers.QueueGroupConfig) []repository.QueueGroupConfig {
+	result := make([]repository.QueueGroupConfig, len(queueGroups))
+	for i, qg := range queueGroups {
+		result[i] = repository.QueueGroupConfig{
+			Name:        qg.Name,
+			Concurrency: qg.Concurrency,
+			Priorities:  qg.Priorities,
+		}
+	}
+	return result
 }

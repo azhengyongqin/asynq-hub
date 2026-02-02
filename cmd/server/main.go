@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"embed"
-	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -43,22 +43,26 @@ var WebFS embed.FS
 func main() {
 	// 初始化结构化日志（开发模式）
 	if err := logger.Init(false); err != nil {
-		log.Fatalf("初始化日志失败: %v", err)
+		logger.L.Fatal().Err(err).Msg("初始化日志失败")
+		os.Exit(1)
 	}
 	defer logger.Sync()
 
 	// 加载配置
 	cfg, err := config.Load()
 	if err != nil {
-		logger.S.Fatalf("加载配置失败: %v", err)
+		logger.L.Fatal().Err(err).Msg("加载配置失败")
 	}
 
 	// 验证配置
 	if err := cfg.Validate(); err != nil {
-		logger.S.Fatalf("配置验证失败: %v", err)
+		logger.L.Fatal().Err(err).Msg("配置验证失败")
 	}
 
-	logger.S.Infof("服务启动，HTTP: %s, gRPC: %s", cfg.HTTP.Addr, cfg.GRPC.Addr)
+	logger.L.Info().
+		Str("http", cfg.HTTP.Addr).
+		Str("grpc", cfg.GRPC.Addr).
+		Msg("服务启动")
 
 	httpAddr := cfg.HTTP.Addr
 	redisAddr := cfg.Redis.Addr
@@ -78,35 +82,43 @@ func main() {
 	)
 
 	// 使用配置的连接池参数
-	poolCfg := postgres.PoolConfig{
-		MaxConns:          cfg.DBPool.MaxConns,
-		MinConns:          cfg.DBPool.MinConns,
-		MaxConnLifetime:   cfg.DBPool.MaxConnLifetime,
-		MaxConnIdleTime:   cfg.DBPool.MaxConnIdleTime,
-		HealthCheckPeriod: cfg.DBPool.HealthCheckPeriod,
+	dbCfg := postgres.DBConfig{
+		MaxOpenConns:    int(cfg.DBPool.MaxConns),
+		MaxIdleConns:    int(cfg.DBPool.MinConns),
+		ConnMaxLifetime: cfg.DBPool.MaxConnLifetime,
+		ConnMaxIdleTime: cfg.DBPool.MaxConnIdleTime,
 	}
 
-	pgPool, err := postgres.NewPoolWithConfig(context.Background(), postgresDSN, poolCfg)
+	db, err := postgres.NewDBWithConfig(context.Background(), postgresDSN, dbCfg)
 	if err != nil {
-		log.Fatalf("connect postgres: %v", err)
+		logger.L.Fatal().Err(err).Msg("连接数据库失败")
 	}
-	defer pgPool.Close()
+	defer db.Close()
 
-	workerRepo = repository.NewWorkerRepo(pgPool.Pool)
-	taskRepo = repository.NewTaskRepo(pgPool.Pool)
+	workerRepo = repository.NewWorkerRepo(db.DB)
+	taskRepo = repository.NewTaskRepo(db.DB)
 
 	// 加载已注册的 workers
 	cfgs, err := workerRepo.List(context.Background())
 	if err != nil {
-		log.Fatalf("load workers: %v", err)
+		logger.L.Fatal().Err(err).Msg("加载 worker 配置失败")
 	}
 	for _, c := range cfgs {
+		// 转换队列组配置
+		queueGroups := make([]workers.QueueGroupConfig, len(c.QueueGroups))
+		for i, qg := range c.QueueGroups {
+			queueGroups[i] = workers.QueueGroupConfig{
+				Name:        qg.Name,
+				Concurrency: qg.Concurrency,
+				Priorities:  qg.Priorities,
+			}
+		}
+
 		workerCfg := workers.Config{
 			WorkerName:        c.WorkerName,
 			BaseURL:           c.BaseURL,
 			RedisAddr:         c.RedisAddr,
-			Concurrency:       c.Concurrency,
-			Queues:            c.Queues,
+			QueueGroups:       queueGroups,
 			DefaultRetryCount: c.DefaultRetryCount,
 			DefaultTimeout:    c.DefaultTimeout,
 			DefaultDelay:      c.DefaultDelay,
@@ -115,18 +127,18 @@ func main() {
 		}
 		_, _ = workerStore.Upsert(workerCfg)
 	}
-	logger.S.Infof("已加载 %d 个 worker 配置", len(cfgs))
+	logger.L.Info().Int("count", len(cfgs)).Msg("已加载 worker 配置")
 
 	// Asynq client：用于 HTTP 入队
 	redisOpt, err := asynqx.NewRedisConnOpt(redisAddr)
 	if err != nil {
-		log.Fatalf("parse redis uri: %v", err)
+		logger.L.Fatal().Err(err).Msg("解析 Redis URI 失败")
 	}
 	asynqClient := asynq.NewClient(redisOpt)
 	defer asynqClient.Close()
 
 	// 创建健康检查器
-	healthChecker := healthcheck.NewHealthChecker(pgPool.Pool, asynqClient, redisAddr)
+	healthChecker := healthcheck.NewHealthChecker(db.DB, asynqClient, redisAddr)
 
 	httpSrv := &http.Server{
 		Addr: httpAddr,
@@ -145,9 +157,9 @@ func main() {
 	defer stop()
 
 	go func() {
-		logger.S.Infof("HTTP 服务监听: %s", httpAddr)
+		logger.L.Info().Str("addr", httpAddr).Msg("HTTP 服务监听")
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.S.Fatalf("HTTP 服务错误: %v", err)
+			logger.L.Fatal().Err(err).Msg("HTTP 服务错误")
 		}
 	}()
 
@@ -157,5 +169,5 @@ func main() {
 	defer cancel()
 
 	_ = httpSrv.Shutdown(shutdownCtx)
-	logger.S.Info("服务已优雅关闭")
+	logger.L.Info().Msg("服务已优雅关闭")
 }

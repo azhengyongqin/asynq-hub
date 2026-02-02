@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import WorkersPage from '@/pages/WorkersPage'
 import TasksPage from '@/pages/TasksPage'
 import { Sidebar } from '@/components/layout/sidebar'
@@ -7,7 +6,6 @@ import { Header } from '@/components/layout/header'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('workers')
-  const { t } = useTranslation()
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background font-sans antialiased">

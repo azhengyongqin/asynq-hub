@@ -40,9 +40,11 @@
       "retryCount": "重试次数",
       "timeout": "超时时间",
       "queues": "队列配置",
+      "queueGroups": "队列组",
       "redis": "Redis 地址",
       "lastHeartbeat": "最后心跳"
     },
+    "noQueueGroups": "未配置队列组",
     "stats": {
       "totalTasks": "总任务数",
       "successRate": "成功率",

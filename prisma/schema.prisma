@@ -17,8 +17,7 @@ model Worker {
   workerName        String    @unique @map("worker_name") @db.Text
   baseUrl           String?   @map("base_url") @db.Text
   redisAddr         String?   @map("redis_addr") @db.Text
-  concurrency       Int       @default(10)
-  queues            Json      @db.JsonB // {"queue_name": weight}
+  queueGroups       Json      @map("queue_groups") @db.JsonB // [{name, concurrency, priorities}]
   defaultRetryCount Int       @default(3) @map("default_retry_count")
   defaultTimeout    Int       @default(30) @map("default_timeout") // seconds
   defaultDelay      Int       @default(0) @map("default_delay") // seconds
@@ -41,8 +40,8 @@ model Task {
   id             BigInt   @id @default(autoincrement())
   taskId         String   @unique @map("task_id") @db.Text
   workerName     String   @map("worker_name") @db.Text
-  queue          String   @db.Text // 格式: "workerName:queue_name"
-  priority       Int      @default(0)
+  queue          String   @db.Text // 格式: "workerName:queueGroupName:priority"
+  priority       Int      @default(0) // 1=low, 2=default, 3=critical
   payload        Json     @db.JsonB
   status         String   @db.Text // pending/running/success/fail/dead
   lastAttempt    Int      @default(0) @map("last_attempt")

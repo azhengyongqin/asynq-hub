@@ -14,6 +14,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/azhengyongqin/asynq-hub/internal/healthcheck"
+	"github.com/azhengyongqin/asynq-hub/internal/logger"
 	"github.com/azhengyongqin/asynq-hub/internal/middleware"
 	"github.com/azhengyongqin/asynq-hub/internal/repository"
 	"github.com/azhengyongqin/asynq-hub/internal/server/handler"
@@ -49,6 +50,7 @@ func NewRouter(deps Deps) http.Handler {
 
 	// 全局中间件
 	r.Use(middleware.RequestIDMiddleware())
+	r.Use(middleware.LoggingMiddleware())
 	r.Use(middleware.PrometheusMiddleware())
 	r.Use(middleware.PayloadSizeLimit(middleware.MaxPayloadSize))
 	r.Use(middleware.CORSMiddleware())
@@ -109,6 +111,15 @@ func NewRouter(deps Deps) http.Handler {
 			r.NoRoute(func(c *gin.Context) {
 				path := c.Request.URL.Path
 
+				// 如果是 API 路径但未匹配到路由，返回 404
+				if strings.HasPrefix(path, "/api/") {
+					c.JSON(http.StatusNotFound, gin.H{
+						"error": "API 路由不存在",
+						"path":  path,
+					})
+					return
+				}
+
 				// 尝试打开文件
 				f, err := distFS.Open(strings.TrimPrefix(path, "/"))
 				if err == nil {
@@ -123,8 +134,25 @@ func NewRouter(deps Deps) http.Handler {
 				fileServer.ServeHTTP(c.Writer, c.Request)
 			})
 
-			log.Printf("✅ Web UI 已挂载到根路径 /")
+			logger.L.Info().Msg("Web UI 已挂载到根路径 /")
 		}
+	} else {
+		// 如果没有 Web UI，则所有未匹配的路由返回 404
+		r.NoRoute(func(c *gin.Context) {
+			path := c.Request.URL.Path
+
+			// API 路径返回 JSON 格式的 404
+			if strings.HasPrefix(path, "/api/") {
+				c.JSON(http.StatusNotFound, gin.H{
+					"error": "API 路由不存在",
+					"path":  path,
+				})
+				return
+			}
+
+			// 其他路径返回简单的 404 文本
+			c.String(http.StatusNotFound, "404 页面不存在")
+		})
 	}
 
 	return r

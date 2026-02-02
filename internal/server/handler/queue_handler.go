@@ -57,24 +57,28 @@ func (h *QueueHandler) GetQueueStats(c *gin.Context) {
 	inspector := asynq.NewInspector(asynq.RedisClientOpt{Addr: workerCfg.RedisAddr})
 
 	var queues []interface{}
-	for qName := range workerCfg.Queues {
-		fullQueue := workerName + ":" + qName
-		info, err := inspector.GetQueueInfo(fullQueue)
-		if err != nil {
-			continue
-		}
+	// 遍历所有队列组和优先级
+	for _, qg := range workerCfg.QueueGroups {
+		for priority := range qg.Priorities {
+			fullQueue := workerCfg.FullQueueName(qg.Name, priority)
+			info, err := inspector.GetQueueInfo(fullQueue)
+			if err != nil {
+				continue
+			}
 
-		queues = append(queues, gin.H{
-			"queue":     qName,
-			"full_name": fullQueue,
-			"pending":   info.Pending,
-			"active":    info.Active,
-			"scheduled": info.Scheduled,
-			"retry":     info.Retry,
-			"archived":  info.Archived,
-			"completed": info.Completed,
-			"size":      info.Size,
-		})
+			queues = append(queues, gin.H{
+				"queue_group": qg.Name,
+				"priority":    priority,
+				"full_name":   fullQueue,
+				"pending":     info.Pending,
+				"active":      info.Active,
+				"scheduled":   info.Scheduled,
+				"retry":       info.Retry,
+				"archived":    info.Archived,
+				"completed":   info.Completed,
+				"size":        info.Size,
+			})
+		}
 	}
 
 	c.JSON(http.StatusOK, dto.QueueStatsResponse{
@@ -118,26 +122,33 @@ func (h *QueueHandler) ClearQueue(c *gin.Context) {
 	totalDeleted := 0
 
 	if req.QueueName != "" {
-		// 清空指定队列
-		fullQueue := req.WorkerName + ":" + req.QueueName
-		deleted, err := inspector.DeleteAllPendingTasks(fullQueue)
-		if err == nil {
-			clearedQueues = append(clearedQueues, req.QueueName)
-			totalDeleted += deleted
+		// 清空指定队列组的所有优先级
+		qg := workerCfg.GetQueueGroup(req.QueueName)
+		if qg != nil {
+			for priority := range qg.Priorities {
+				fullQueue := workerCfg.FullQueueName(req.QueueName, priority)
+				deleted, err := inspector.DeleteAllPendingTasks(fullQueue)
+				if err == nil {
+					clearedQueues = append(clearedQueues, fullQueue)
+					totalDeleted += deleted
+				}
+			}
 		}
 	} else {
-		// 清空所有队列
-		for qName := range workerCfg.Queues {
-			fullQueue := req.WorkerName + ":" + qName
+		// 清空所有队列组的所有优先级
+		for _, qg := range workerCfg.QueueGroups {
+			for priority := range qg.Priorities {
+				fullQueue := workerCfg.FullQueueName(qg.Name, priority)
 
-			// 删除 pending 任务
-			deleted, err := inspector.DeleteAllPendingTasks(fullQueue)
-			if err != nil {
-				continue
+				// 删除 pending 任务
+				deleted, err := inspector.DeleteAllPendingTasks(fullQueue)
+				if err != nil {
+					continue
+				}
+
+				clearedQueues = append(clearedQueues, fullQueue)
+				totalDeleted += deleted
 			}
-
-			clearedQueues = append(clearedQueues, qName)
-			totalDeleted += deleted
 		}
 	}
 
@@ -184,24 +195,31 @@ func (h *QueueHandler) ClearDeadQueue(c *gin.Context) {
 	totalDeleted := 0
 
 	if req.QueueName != "" {
-		// 清空指定队列的死信任务
-		fullQueue := req.WorkerName + ":" + req.QueueName
-		deleted, err := inspector.DeleteAllArchivedTasks(fullQueue)
-		if err == nil {
-			clearedQueues = append(clearedQueues, req.QueueName)
-			totalDeleted += deleted
+		// 清空指定队列组的死信任务
+		qg := workerCfg.GetQueueGroup(req.QueueName)
+		if qg != nil {
+			for priority := range qg.Priorities {
+				fullQueue := workerCfg.FullQueueName(req.QueueName, priority)
+				deleted, err := inspector.DeleteAllArchivedTasks(fullQueue)
+				if err == nil {
+					clearedQueues = append(clearedQueues, fullQueue)
+					totalDeleted += deleted
+				}
+			}
 		}
 	} else {
-		// 清空所有队列的死信任务
-		for qName := range workerCfg.Queues {
-			fullQueue := req.WorkerName + ":" + qName
-			deleted, err := inspector.DeleteAllArchivedTasks(fullQueue)
-			if err != nil {
-				continue
-			}
+		// 清空所有队列组的死信任务
+		for _, qg := range workerCfg.QueueGroups {
+			for priority := range qg.Priorities {
+				fullQueue := workerCfg.FullQueueName(qg.Name, priority)
+				deleted, err := inspector.DeleteAllArchivedTasks(fullQueue)
+				if err != nil {
+					continue
+				}
 
-			clearedQueues = append(clearedQueues, qName)
-			totalDeleted += deleted
+				clearedQueues = append(clearedQueues, fullQueue)
+				totalDeleted += deleted
+			}
 		}
 	}
 

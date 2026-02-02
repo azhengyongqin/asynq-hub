@@ -81,12 +81,11 @@ func (c *Client) GetWorkerConfig(ctx context.Context, workerName string) (*Worke
 
 // WorkerConfigResponse Worker 配置响应
 type WorkerConfigResponse struct {
-	WorkerName        string         `json:"worker_name"`
-	Concurrency       int            `json:"concurrency"`
-	Queues            map[string]int `json:"queues"`
-	DefaultRetryCount int            `json:"default_retry_count"`
-	DefaultTimeout    int            `json:"default_timeout"`
-	IsEnabled         bool           `json:"is_enabled"`
+	WorkerName        string             `json:"worker_name"`
+	QueueGroups       []QueueGroupConfig `json:"queue_groups"`
+	DefaultRetryCount int                `json:"default_retry_count"`
+	DefaultTimeout    int                `json:"default_timeout"`
+	IsEnabled         bool               `json:"is_enabled"`
 }
 
 // EnqueueTask 直接向控制面提交任务（bypass Asynq）
@@ -126,7 +125,8 @@ func (c *Client) EnqueueTask(ctx context.Context, req EnqueueTaskRequest) (*Enqu
 // EnqueueTaskRequest 任务入队请求
 type EnqueueTaskRequest struct {
 	WorkerName   string          `json:"worker_name"`
-	Queue        string          `json:"queue"`
+	Queue        string          `json:"queue"`              // 队列组名称
+	Priority     string          `json:"priority,omitempty"` // 优先级：critical, default, low（默认 default）
 	TaskID       string          `json:"task_id,omitempty"`
 	Payload      json.RawMessage `json:"payload"`
 	DelaySeconds int             `json:"delay_seconds,omitempty"`
@@ -137,6 +137,7 @@ type EnqueueTaskResponse struct {
 	TaskID      string `json:"task_id"`
 	WorkerName  string `json:"worker_name"`
 	Queue       string `json:"queue"`
+	Priority    string `json:"priority"`
 	AsynqTaskID string `json:"asynq_task_id"`
 	Status      string `json:"status"`
 }

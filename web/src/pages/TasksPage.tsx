@@ -26,8 +26,9 @@ import {
   Check,
   Filter,
   X,
-  ArrowRight,
-  Info
+  Info,
+  Server,
+  Cpu
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -108,7 +109,7 @@ export default function TasksPage() {
 
   const ALL = '__all__'
   const statusOptions = useMemo(() => ['', 'pending', 'running', 'success', 'fail', 'dead'] as const, [])
-  const queueOptions = useMemo(() => ['', 'critical', 'default', 'crawler'] as const, [])
+  const [queueGroups, setQueueGroups] = useState<string[]>([])
 
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -191,8 +192,23 @@ export default function TasksPage() {
     try {
       const res = await fetch('/api/v1/workers')
       if (!res.ok) return
-      const data = (await res.json()) as { items: { worker_name: string }[] }
-      setWorkers((data.items ?? []).map((x) => x.worker_name))
+      const data = (await res.json()) as { 
+        items: { 
+          worker_name: string
+          queue_groups?: { name: string }[]
+        }[] 
+      }
+      const items = data.items ?? []
+      setWorkers(items.map((x) => x.worker_name))
+      
+      // 提取所有唯一的队列组名称
+      const allQueueGroups = new Set<string>()
+      items.forEach((worker) => {
+        (worker.queue_groups || []).forEach((qg) => {
+          allQueueGroups.add(qg.name)
+        })
+      })
+      setQueueGroups(Array.from(allQueueGroups).sort())
     } catch {
       // Ignore
     }
@@ -282,12 +298,12 @@ export default function TasksPage() {
                   value={filters.queue === '' ? ALL : filters.queue}
                   onValueChange={(v) => setFilters((p) => ({ ...p, queue: v === ALL ? '' : v }))}
                 >
-                  <SelectTrigger className="w-[110px] h-7 border-none bg-transparent text-xs font-medium focus:ring-0">
+                  <SelectTrigger className="w-[130px] h-7 border-none bg-transparent text-xs font-medium focus:ring-0">
                     <SelectValue placeholder={t('tasks.filters.queue')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>{t('tasks.filters.allQueues')}</SelectItem>
-                    {queueOptions.filter((x) => x !== '').map((q) => (
+                    {queueGroups.map((q) => (
                       <SelectItem key={q} value={q}>{q}</SelectItem>
                     ))}
                   </SelectContent>

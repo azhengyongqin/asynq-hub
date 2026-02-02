@@ -2,88 +2,99 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-type Pool struct {
-	*pgxpool.Pool
+// DB GORM 数据库封装
+type DB struct {
+	*gorm.DB
 }
 
-// PoolConfig 连接池配置
-type PoolConfig struct {
-	MaxConns          int32         // 最大连接数，默认 20
-	MinConns          int32         // 最小连接数，默认 5
-	MaxConnLifetime   time.Duration // 连接最大生命周期，默认 30分钟
-	MaxConnIdleTime   time.Duration // 连接最大空闲时间，默认 5分钟
-	HealthCheckPeriod time.Duration // 健康检查周期，默认 1分钟
+// DBConfig 数据库连接配置
+type DBConfig struct {
+	MaxOpenConns    int           // 最大打开连接数，默认 20
+	MaxIdleConns    int           // 最大空闲连接数，默认 5
+	ConnMaxLifetime time.Duration // 连接最大生命周期，默认 30分钟
+	ConnMaxIdleTime time.Duration // 连接最大空闲时间，默认 5分钟
 }
 
-// DefaultPoolConfig 返回默认连接池配置
-func DefaultPoolConfig() PoolConfig {
-	return PoolConfig{
-		MaxConns:          getEnvAsInt32("DB_MAX_CONNS", 20),
-		MinConns:          getEnvAsInt32("DB_MIN_CONNS", 5),
-		MaxConnLifetime:   getEnvAsDuration("DB_MAX_CONN_LIFETIME", 30*time.Minute),
-		MaxConnIdleTime:   getEnvAsDuration("DB_MAX_CONN_IDLE_TIME", 5*time.Minute),
-		HealthCheckPeriod: getEnvAsDuration("DB_HEALTH_CHECK_PERIOD", 1*time.Minute),
+// DefaultDBConfig 返回默认数据库配置
+func DefaultDBConfig() DBConfig {
+	return DBConfig{
+		MaxOpenConns:    getEnvAsInt("DB_MAX_CONNS", 20),
+		MaxIdleConns:    getEnvAsInt("DB_MIN_CONNS", 5),
+		ConnMaxLifetime: getEnvAsDuration("DB_MAX_CONN_LIFETIME", 30*time.Minute),
+		ConnMaxIdleTime: getEnvAsDuration("DB_MAX_CONN_IDLE_TIME", 5*time.Minute),
 	}
 }
 
-func NewPool(ctx context.Context, dsn string) (*Pool, error) {
-	return NewPoolWithConfig(ctx, dsn, DefaultPoolConfig())
+// NewDB 使用默认配置创建数据库连接
+func NewDB(ctx context.Context, dsn string) (*DB, error) {
+	return NewDBWithConfig(ctx, dsn, DefaultDBConfig())
 }
 
-func NewPoolWithConfig(ctx context.Context, dsn string, poolCfg PoolConfig) (*Pool, error) {
+// NewDBWithConfig 使用指定配置创建数据库连接
+func NewDBWithConfig(ctx context.Context, dsn string, cfg DBConfig) (*DB, error) {
 	if err := validatePostgresURI(dsn); err != nil {
 		return nil, fmt.Errorf("invalid POSTGRES_DSN: %w", err)
 	}
 
-	cfg, err := pgxpool.ParseConfig(dsn)
+	// 创建 GORM 实例
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open database: %w", err)
 	}
 
-	// 应用连接池配置
-	cfg.MaxConns = poolCfg.MaxConns
-	cfg.MinConns = poolCfg.MinConns
-	cfg.MaxConnLifetime = poolCfg.MaxConnLifetime
-	cfg.MaxConnIdleTime = poolCfg.MaxConnIdleTime
-	cfg.HealthCheckPeriod = poolCfg.HealthCheckPeriod
-
-	// 连接超时设置
-	cfg.ConnConfig.ConnectTimeout = 10 * time.Second
-
-	p, err := pgxpool.NewWithConfig(ctx, cfg)
+	// 获取底层 sql.DB 并配置连接池
+	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get sql.DB: %w", err)
 	}
 
-	// 快速连通性检查
-	cctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
+	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
+	sqlDB.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
+
+	// 连通性检查
+	pingCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
-	if err := p.Ping(cctx); err != nil {
-		p.Close()
-		return nil, err
+	if err := sqlDB.PingContext(pingCtx); err != nil {
+		return nil, fmt.Errorf("ping database: %w", err)
 	}
 
-	return &Pool{Pool: p}, nil
+	return &DB{DB: db}, nil
 }
 
-// Stats 返回连接池统计信息
-func (p *Pool) Stats() *pgxpool.Stat {
-	return p.Pool.Stat()
+// Close 关闭数据库连接
+func (d *DB) Close() error {
+	sqlDB, err := d.DB.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
 }
 
-// getEnvAsInt32 从环境变量获取 int32 值
-func getEnvAsInt32(key string, defaultVal int32) int32 {
+// SqlDB 返回底层 sql.DB（用于健康检查等）
+func (d *DB) SqlDB() (*sql.DB, error) {
+	return d.DB.DB()
+}
+
+// getEnvAsInt 从环境变量获取 int 值
+func getEnvAsInt(key string, defaultVal int) int {
 	if val := os.Getenv(key); val != "" {
-		if intVal, err := strconv.ParseInt(val, 10, 32); err == nil {
-			return int32(intVal)
+		if intVal, err := strconv.Atoi(val); err == nil {
+			return intVal
 		}
 	}
 	return defaultVal

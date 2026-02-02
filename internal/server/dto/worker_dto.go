@@ -26,16 +26,22 @@ type WorkerTimeSeriesResponse struct {
 	TimeSeries interface{} `json:"timeseries"`
 }
 
+// QueueGroupRequest 队列组配置请求
+type QueueGroupRequest struct {
+	Name        string         `json:"name" binding:"required" example:"web_crawl"`
+	Concurrency int32          `json:"concurrency" example:"10"`
+	Priorities  map[string]int `json:"priorities"` // 可选，默认为 critical=50, default=30, low=10
+}
+
 // CreateWorkerRequest 创建 Worker 请求
 type CreateWorkerRequest struct {
-	WorkerName        string         `json:"worker_name" binding:"required" example:"my-worker"`
-	BaseURL           string         `json:"base_url" example:"http://localhost:8080"`
-	RedisAddr         string         `json:"redis_addr" example:"redis://localhost:6379/0"`
-	Concurrency       int32          `json:"concurrency" binding:"required,min=1" example:"10"`
-	Queues            map[string]int `json:"queues" binding:"required"`
-	DefaultRetryCount int32          `json:"default_retry_count" example:"3"`
-	DefaultTimeout    int32          `json:"default_timeout" example:"30"`
-	DefaultDelay      int32          `json:"default_delay" example:"0"`
+	WorkerName        string              `json:"worker_name" binding:"required" example:"my-worker"`
+	BaseURL           string              `json:"base_url" example:"http://localhost:8080"`
+	RedisAddr         string              `json:"redis_addr" example:"redis://localhost:6379/0"`
+	QueueGroups       []QueueGroupRequest `json:"queue_groups" binding:"required,min=1"`
+	DefaultRetryCount int32               `json:"default_retry_count" example:"3"`
+	DefaultTimeout    int32               `json:"default_timeout" example:"30"`
+	DefaultDelay      int32               `json:"default_delay" example:"0"`
 }
 
 // HeartbeatResponse 心跳响应

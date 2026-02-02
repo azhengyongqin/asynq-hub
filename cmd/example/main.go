@@ -48,33 +48,33 @@ func generateTestData() {
 		redisAddr = "redis://localhost:16379/0"
 	}
 
-	// 创建 3 个不同的 worker 配置
+	// 创建 3 个不同的 worker 配置（使用新的队列组结构）
 	workers := []struct {
-		name   string
-		queues map[string]int
+		name        string
+		queueGroups []sdk.QueueGroupConfig
 	}{
 		{
 			name: "crawler-worker-1",
-			queues: map[string]int{
-				"web_crawl":   10,
-				"api_crawl":   8,
-				"image_crawl": 5,
+			queueGroups: []sdk.QueueGroupConfig{
+				{Name: "web_crawl", Concurrency: 10},
+				{Name: "api_crawl", Concurrency: 8},
+				{Name: "image_crawl", Concurrency: 5},
 			},
 		},
 		{
 			name: "ai-worker-1",
-			queues: map[string]int{
-				"prompt_crawl":  10,
-				"text_analyze":  8,
-				"image_process": 6,
+			queueGroups: []sdk.QueueGroupConfig{
+				{Name: "prompt_crawl", Concurrency: 10},
+				{Name: "text_analyze", Concurrency: 8},
+				{Name: "image_process", Concurrency: 6},
 			},
 		},
 		{
 			name: "data-worker-1",
-			queues: map[string]int{
-				"data_process": 10,
-				"data_export":  7,
-				"data_import":  5,
+			queueGroups: []sdk.QueueGroupConfig{
+				{Name: "data_process", Concurrency: 10},
+				{Name: "data_export", Concurrency: 7},
+				{Name: "data_import", Concurrency: 5},
 			},
 		},
 	}
@@ -85,10 +85,9 @@ func generateTestData() {
 			w.name,
 			sdk.WithBaseURL(baseURL),
 			sdk.WithRedisAddr(redisAddr),
-			sdk.WithConcurrency(10),
 			sdk.WithDefaultRetryCount(3),
 			sdk.WithDefaultTimeout(30*time.Second),
-			sdk.WithQueues(w.queues),
+			sdk.WithQueueGroups(w.queueGroups),
 			sdk.WithRegisterOverwrite(), // 覆盖已有配置以确保队列配置正确
 		)
 		if err != nil {
@@ -98,10 +97,10 @@ func generateTestData() {
 		// 等待确保注册完成
 		time.Sleep(500 * time.Millisecond)
 
-		log.Printf("✓ 注册 worker: %s (队列: %v)", w.name, getQueueNames(w.queues))
+		log.Printf("✓ 注册 worker: %s (队列组: %v)", w.name, getQueueGroupNames(w.queueGroups))
 
 		// 为每个 worker 生成测试任务
-		generateTasksForWorker(worker, w.name, w.queues)
+		generateTasksForWorker(worker, w.name, w.queueGroups)
 
 		log.Println()
 	}
@@ -112,10 +111,10 @@ func generateTestData() {
 }
 
 // generateTasksForWorker 为指定 worker 生成测试任务
-func generateTasksForWorker(worker *sdk.Worker, workerName string, queues map[string]int) {
+func generateTasksForWorker(worker *sdk.Worker, workerName string, queueGroups []sdk.QueueGroupConfig) {
 	rand.Seed(time.Now().UnixNano())
 
-	// 每个队列生成不同数量的任务
+	// 每个队列组生成不同数量的任务
 	taskCounts := map[string]int{
 		"web_crawl":     50,
 		"api_crawl":     30,
@@ -128,17 +127,22 @@ func generateTasksForWorker(worker *sdk.Worker, workerName string, queues map[st
 		"data_import":   20,
 	}
 
-	for queueName := range queues {
-		count := taskCounts[queueName]
+	priorities := []string{sdk.PriorityCritical, sdk.PriorityDefault, sdk.PriorityLow}
+
+	for _, qg := range queueGroups {
+		count := taskCounts[qg.Name]
 		if count == 0 {
 			count = 20 // 默认生成 20 个任务
 		}
 
 		for i := 0; i < count; i++ {
-			taskID := fmt.Sprintf("%s-%s-%d-%d", workerName, queueName, time.Now().Unix(), i)
-			payload := generatePayloadForQueue(queueName, i)
+			taskID := fmt.Sprintf("%s-%s-%d-%d", workerName, qg.Name, time.Now().Unix(), i)
+			payload := generatePayloadForQueue(qg.Name, i)
 
-			worker.Enqueue(queueName, &sdk.Task{
+			// 随机选择优先级
+			priority := priorities[rand.Intn(len(priorities))]
+
+			worker.EnqueueWithPriority(qg.Name, priority, &sdk.Task{
 				ID:      taskID,
 				Payload: payload,
 			})
@@ -146,7 +150,7 @@ func generateTasksForWorker(worker *sdk.Worker, workerName string, queues map[st
 			// 避免过快入队
 			time.Sleep(5 * time.Millisecond)
 		}
-		log.Printf("  → 队列 %s: 已生成 %d 个任务", queueName, count)
+		log.Printf("  → 队列组 %s: 已生成 %d 个任务（分布在 critical/default/low 三个优先级）", qg.Name, count)
 	}
 }
 
@@ -242,20 +246,19 @@ func runWorker() {
 		workerName,
 		sdk.WithBaseURL(os.Getenv("BASE_URL")),
 		sdk.WithRedisAddr(os.Getenv("REDIS_ADDR")),
-		sdk.WithConcurrency(10),
 		sdk.WithDefaultRetryCount(3),
 		sdk.WithDefaultTimeout(30*time.Second),
 		sdk.WithDefaultDelay(10*time.Second),
-		sdk.WithQueues(map[string]int{
-			"web_crawl":     10,
-			"prompt_crawl":  10,
-			"api_crawl":     8,
-			"image_crawl":   7,
-			"text_analyze":  9,
-			"image_process": 8,
-			"data_process":  10,
-			"data_export":   6,
-			"data_import":   7,
+		sdk.WithQueueGroups([]sdk.QueueGroupConfig{
+			{Name: "web_crawl", Concurrency: 10},
+			{Name: "prompt_crawl", Concurrency: 10},
+			{Name: "api_crawl", Concurrency: 8},
+			{Name: "image_crawl", Concurrency: 7},
+			{Name: "text_analyze", Concurrency: 9},
+			{Name: "image_process", Concurrency: 8},
+			{Name: "data_process", Concurrency: 10},
+			{Name: "data_export", Concurrency: 6},
+			{Name: "data_import", Concurrency: 7},
 		}),
 	)
 	if err != nil {
@@ -275,7 +278,7 @@ func runWorker() {
 
 // registerHandlers 注册所有任务处理器
 func registerHandlers(work *sdk.Worker) {
-	// web_crawl: 网页抓取
+	// web_crawl: 网页抓取（为整个队列组注册处理器）
 	work.HandleFunc("web_crawl", func(ctx context.Context, t *asynq.Task) error {
 		return handleTask(ctx, t, "web_crawl", 200, 400)
 	})
@@ -364,18 +367,19 @@ func createInitialTasks(work *sdk.Worker) {
 	suffix := fmt.Sprintf("%d", time.Now().Unix())
 
 	tasks := []struct {
-		queue   string
-		payload string
+		queueGroup string
+		priority   string
+		payload    string
 	}{
-		{"web_crawl", `{"url":"https://example.com"}`},
-		{"prompt_crawl", `{"url":"https://example.com","prompt":"请抽取标题、摘要、发布时间"}`},
-		{"api_crawl", `{"endpoint":"https://api.example.com/v1/users","method":"GET"}`},
-		{"image_crawl", `{"image_url":"https://cdn.example.com/test.jpg","size":"1920x1080"}`},
+		{"web_crawl", sdk.PriorityCritical, `{"url":"https://example.com"}`},
+		{"prompt_crawl", sdk.PriorityDefault, `{"url":"https://example.com","prompt":"请抽取标题、摘要、发布时间"}`},
+		{"api_crawl", sdk.PriorityLow, `{"endpoint":"https://api.example.com/v1/users","method":"GET"}`},
+		{"image_crawl", sdk.PriorityDefault, `{"image_url":"https://cdn.example.com/test.jpg","size":"1920x1080"}`},
 	}
 
 	for i, task := range tasks {
-		taskID := fmt.Sprintf("%s-%s-%d", task.queue, suffix, i)
-		work.Enqueue(task.queue, &sdk.Task{
+		taskID := fmt.Sprintf("%s-%s-%d", task.queueGroup, suffix, i)
+		work.EnqueueWithPriority(task.queueGroup, task.priority, &sdk.Task{
 			ID:      taskID,
 			Payload: []byte(task.payload),
 		})
@@ -420,11 +424,11 @@ func loadEnvFile() error {
 	return nil
 }
 
-// getQueueNames 获取队列名列表
-func getQueueNames(queues map[string]int) []string {
-	names := make([]string, 0, len(queues))
-	for name := range queues {
-		names = append(names, name)
+// getQueueGroupNames 获取队列组名列表
+func getQueueGroupNames(queueGroups []sdk.QueueGroupConfig) []string {
+	names := make([]string, len(queueGroups))
+	for i, qg := range queueGroups {
+		names[i] = qg.Name
 	}
 	return names
 }

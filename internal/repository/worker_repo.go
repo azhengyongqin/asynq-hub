@@ -2,160 +2,128 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	workers "github.com/azhengyongqin/asynq-hub/internal/worker"
 )
 
+// WorkerRepo Worker 仓储实现
 type WorkerRepo struct {
-	pool *pgxpool.Pool
+	db *gorm.DB
 }
 
-func NewWorkerRepo(pool *pgxpool.Pool) *WorkerRepo {
-	return &WorkerRepo{pool: pool}
+// NewWorkerRepo 创建 Worker 仓储
+func NewWorkerRepo(db *gorm.DB) *WorkerRepo {
+	return &WorkerRepo{db: db}
 }
 
 // Upsert 插入或更新 worker 配置
 func (r *WorkerRepo) Upsert(ctx context.Context, c WorkerConfig) error {
-	queuesJSON, _ := json.Marshal(c.Queues)
+	model := WorkerConfigToModel(c)
+	model.UpdatedAt = time.Now()
 
-	_, err := r.pool.Exec(ctx, `
-insert into worker(worker_name, base_url, redis_addr, concurrency, queues, default_retry_count, default_timeout, default_delay, is_enabled, last_heartbeat_at)
-values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-on conflict (worker_name) do update
-set base_url=excluded.base_url,
-    redis_addr=excluded.redis_addr,
-    concurrency=excluded.concurrency,
-    queues=excluded.queues,
-    default_retry_count=excluded.default_retry_count,
-    default_timeout=excluded.default_timeout,
-    default_delay=excluded.default_delay,
-    is_enabled=excluded.is_enabled,
-    last_heartbeat_at=excluded.last_heartbeat_at,
-    updated_at=now()
-`, c.WorkerName, c.BaseURL, c.RedisAddr, c.Concurrency, queuesJSON, c.DefaultRetryCount, c.DefaultTimeout, c.DefaultDelay, c.IsEnabled, c.LastHeartbeatAt)
-	return err
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "worker_name"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"base_url", "redis_addr", "queue_groups",
+			"default_retry_count", "default_timeout", "default_delay",
+			"is_enabled", "last_heartbeat_at", "updated_at",
+		}),
+	}).Create(&model).Error
 }
 
 // List 列出所有 worker
 func (r *WorkerRepo) List(ctx context.Context) ([]WorkerConfig, error) {
-	rows, err := r.pool.Query(ctx, `
-select worker_name, coalesce(base_url,''), coalesce(redis_addr,''), concurrency, queues, default_retry_count, default_timeout, default_delay, is_enabled, last_heartbeat_at, created_at, updated_at
-from worker
-order by worker_name asc
-`)
-	if err != nil {
+	var models []WorkerModel
+	if err := r.db.WithContext(ctx).Order("worker_name ASC").Find(&models).Error; err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var out []WorkerConfig
-	for rows.Next() {
-		var c WorkerConfig
-		var queuesJSON []byte
-		if err := rows.Scan(&c.WorkerName, &c.BaseURL, &c.RedisAddr, &c.Concurrency, &queuesJSON, &c.DefaultRetryCount, &c.DefaultTimeout, &c.DefaultDelay, &c.IsEnabled, &c.LastHeartbeatAt, &c.CreatedAt, &c.UpdatedAt); err != nil {
-			return nil, err
-		}
-		// 解析 queues JSON
-		if err := json.Unmarshal(queuesJSON, &c.Queues); err != nil {
-			return nil, err
-		}
-		out = append(out, c)
+	configs := make([]WorkerConfig, len(models))
+	for i, m := range models {
+		configs[i] = m.ToWorkerConfig()
 	}
-	return out, rows.Err()
+	return configs, nil
 }
 
 // Get 获取单个 worker
 func (r *WorkerRepo) Get(ctx context.Context, workerName string) (*WorkerConfig, error) {
-	row := r.pool.QueryRow(ctx, `
-select worker_name, coalesce(base_url,''), coalesce(redis_addr,''), concurrency, queues, default_retry_count, default_timeout, default_delay, is_enabled, last_heartbeat_at, created_at, updated_at
-from worker
-where worker_name=$1
-`, workerName)
-
-	var c WorkerConfig
-	var queuesJSON []byte
-	if err := row.Scan(&c.WorkerName, &c.BaseURL, &c.RedisAddr, &c.Concurrency, &queuesJSON, &c.DefaultRetryCount, &c.DefaultTimeout, &c.DefaultDelay, &c.IsEnabled, &c.LastHeartbeatAt, &c.CreatedAt, &c.UpdatedAt); err != nil {
+	var model WorkerModel
+	if err := r.db.WithContext(ctx).Where("worker_name = ?", workerName).First(&model).Error; err != nil {
 		return nil, err
 	}
-	// 解析 queues JSON
-	if err := json.Unmarshal(queuesJSON, &c.Queues); err != nil {
-		return nil, err
-	}
-	return &c, nil
+	config := model.ToWorkerConfig()
+	return &config, nil
 }
 
 // UpdateHeartbeat 更新心跳时间
 func (r *WorkerRepo) UpdateHeartbeat(ctx context.Context, workerName string, heartbeatAt time.Time) error {
-	_, err := r.pool.Exec(ctx, `
-update worker
-set last_heartbeat_at=$2, updated_at=now()
-where worker_name=$1
-`, workerName, heartbeatAt)
-	return err
+	return r.db.WithContext(ctx).
+		Model(&WorkerModel{}).
+		Where("worker_name = ?", workerName).
+		Updates(map[string]interface{}{
+			"last_heartbeat_at": heartbeatAt,
+			"updated_at":        time.Now(),
+		}).Error
 }
 
 // Delete 删除 worker
 func (r *WorkerRepo) Delete(ctx context.Context, workerName string) error {
-	_, err := r.pool.Exec(ctx, `
-delete from worker where worker_name=$1
-`, workerName)
-	return err
+	return r.db.WithContext(ctx).
+		Where("worker_name = ?", workerName).
+		Delete(&WorkerModel{}).Error
 }
 
 // ListOfflineWorkers 查询离线的 Worker 列表（心跳超过指定时间）
 func (r *WorkerRepo) ListOfflineWorkers(ctx context.Context, offlineDuration time.Duration) ([]WorkerConfig, error) {
-	rows, err := r.pool.Query(ctx, `
-select worker_name, coalesce(base_url,''), coalesce(redis_addr,''), concurrency, queues, default_retry_count, default_timeout, default_delay, is_enabled, last_heartbeat_at, created_at, updated_at
-from worker
-where last_heartbeat_at is null 
-   or last_heartbeat_at < now() - $1::interval
-order by worker_name asc
-`, offlineDuration)
-	if err != nil {
+	cutoffTime := time.Now().Add(-offlineDuration)
+
+	var models []WorkerModel
+	if err := r.db.WithContext(ctx).
+		Where("last_heartbeat_at IS NULL OR last_heartbeat_at < ?", cutoffTime).
+		Order("worker_name ASC").
+		Find(&models).Error; err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var out []WorkerConfig
-	for rows.Next() {
-		var c WorkerConfig
-		var queuesJSON []byte
-		if err := rows.Scan(&c.WorkerName, &c.BaseURL, &c.RedisAddr, &c.Concurrency, &queuesJSON, &c.DefaultRetryCount, &c.DefaultTimeout, &c.DefaultDelay, &c.IsEnabled, &c.LastHeartbeatAt, &c.CreatedAt, &c.UpdatedAt); err != nil {
-			return nil, err
-		}
-		// 解析 queues JSON
-		if err := json.Unmarshal(queuesJSON, &c.Queues); err != nil {
-			return nil, err
-		}
-		out = append(out, c)
+	configs := make([]WorkerConfig, len(models))
+	for i, m := range models {
+		configs[i] = m.ToWorkerConfig()
 	}
-	return out, rows.Err()
+	return configs, nil
 }
 
 // EnsureSeed 种子数据（开发环境使用）
 func (r *WorkerRepo) EnsureSeed(ctx context.Context, seed []workers.Config) error {
 	// 检查是否已有数据
-	row := r.pool.QueryRow(ctx, `select count(1) from worker`)
-	var n int64
-	if err := row.Scan(&n); err != nil {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&WorkerModel{}).Count(&count).Error; err != nil {
 		return err
 	}
-	if n > 0 {
+	if count > 0 {
 		return nil
 	}
 
 	// 插入种子数据
 	for _, c := range seed {
+		// 转换队列组配置
+		queueGroups := make([]QueueGroupConfig, len(c.QueueGroups))
+		for i, qg := range c.QueueGroups {
+			queueGroups[i] = QueueGroupConfig{
+				Name:        qg.Name,
+				Concurrency: qg.Concurrency,
+				Priorities:  qg.Priorities,
+			}
+		}
+
 		repoConfig := WorkerConfig{
 			WorkerName:        c.WorkerName,
 			BaseURL:           c.BaseURL,
 			RedisAddr:         c.RedisAddr,
-			Concurrency:       c.Concurrency,
-			Queues:            c.Queues,
+			QueueGroups:       queueGroups,
 			DefaultRetryCount: c.DefaultRetryCount,
 			DefaultTimeout:    c.DefaultTimeout,
 			DefaultDelay:      c.DefaultDelay,

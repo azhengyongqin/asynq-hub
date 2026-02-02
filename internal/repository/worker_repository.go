@@ -5,20 +5,26 @@ import (
 	"time"
 )
 
+// QueueGroupConfig 队列组配置
+type QueueGroupConfig struct {
+	Name        string         `json:"name"`        // 队列组名称
+	Concurrency int32          `json:"concurrency"` // 并发数
+	Priorities  map[string]int `json:"priorities"`  // 优先级权重
+}
+
 // WorkerConfig Worker 配置信息
 type WorkerConfig struct {
-	WorkerName        string         `json:"worker_name"`
-	BaseURL           string         `json:"base_url,omitempty"`
-	RedisAddr         string         `json:"redis_addr,omitempty"`
-	Concurrency       int32          `json:"concurrency"`
-	Queues            map[string]int `json:"queues"` // queue_name -> weight
-	DefaultRetryCount int32          `json:"default_retry_count"`
-	DefaultTimeout    int32          `json:"default_timeout"` // seconds
-	DefaultDelay      int32          `json:"default_delay"`   // seconds
-	IsEnabled         bool           `json:"is_enabled"`
-	LastHeartbeatAt   *time.Time     `json:"last_heartbeat_at,omitempty"`
-	CreatedAt         time.Time      `json:"created_at"`
-	UpdatedAt         time.Time      `json:"updated_at"`
+	WorkerName        string             `json:"worker_name"`
+	BaseURL           string             `json:"base_url,omitempty"`
+	RedisAddr         string             `json:"redis_addr,omitempty"`
+	QueueGroups       []QueueGroupConfig `json:"queue_groups"` // 队列组配置
+	DefaultRetryCount int32              `json:"default_retry_count"`
+	DefaultTimeout    int32              `json:"default_timeout"` // seconds
+	DefaultDelay      int32              `json:"default_delay"`   // seconds
+	IsEnabled         bool               `json:"is_enabled"`
+	LastHeartbeatAt   *time.Time         `json:"last_heartbeat_at,omitempty"`
+	CreatedAt         time.Time          `json:"created_at"`
+	UpdatedAt         time.Time          `json:"updated_at"`
 }
 
 // WorkerRepository Worker 配置仓储接口

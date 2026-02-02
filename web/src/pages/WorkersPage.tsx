@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { 
@@ -38,12 +38,18 @@ import {
   Area
 } from 'recharts'
 
+// 队列组配置（对应后端 QueueGroupConfig）
+type QueueGroupConfig = {
+  name: string           // 队列组名称
+  concurrency: number    // 并发数
+  priorities: Record<string, number>  // 优先级权重 { critical: 50, default: 30, low: 10 }
+}
+
 type Worker = {
   worker_name: string
   base_url?: string
   redis_addr?: string
-  concurrency: number
-  queues: Record<string, number>
+  queue_groups: QueueGroupConfig[]  // 队列组配置列表
   default_retry_count: number
   default_timeout: number
   default_delay: number
@@ -66,10 +72,12 @@ type WorkerStats = {
   queue_avg_duration?: Record<string, number>
 }
 
-type QueueStats = {
+// QueueStats 用于队列性能统计展示
+interface QueueStats {
   queue: string
   total_tasks: number
   success_tasks: number
+  failed_tasks: number
   avg_duration_ms?: number
   throughput_per_hour: number
 }
@@ -97,7 +105,7 @@ export default function WorkersPage() {
   const [timeseries, setTimeseries] = useState<TimeSeriesData[]>([])
   const [loading, setLoading] = useState(false)
   const [statsLoading, setStatsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [_error, setError] = useState<string | null>(null)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [queueSearchQuery, setQueueSearchQuery] = useState('')
@@ -179,7 +187,7 @@ export default function WorkersPage() {
     : []
 
   // 准备队列统计数据
-  const processedQueueStats = stats?.queue_stats ? Object.entries(stats.queue_stats).map(([queue, total]) => ({
+  const processedQueueStats: QueueStats[] = stats?.queue_stats ? Object.entries(stats.queue_stats).map(([queue, total]) => ({
     queue,
     total_tasks: total,
     success_tasks: stats.queue_success_stats?.[queue] || 0,
@@ -371,7 +379,7 @@ export default function WorkersPage() {
                 <CardContent className="pt-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                     {[
-                      { icon: Cpu, label: t('workers.config.concurrency'), value: selectedWorkerData.concurrency },
+                      { icon: Layers, label: t('workers.config.queueGroups'), value: selectedWorkerData.queue_groups?.length || 0 },
                       { icon: Activity, label: t('workers.config.retryCount'), value: selectedWorkerData.default_retry_count },
                       { icon: Clock, label: t('workers.config.timeout'), value: `${selectedWorkerData.default_timeout}s` },
                       { icon: Database, label: t('workers.config.redis'), value: selectedWorkerData.redis_addr?.split(':')[0] || 'Default', mono: true }
@@ -416,12 +424,12 @@ export default function WorkersPage() {
                 </CardContent>
               </Card>
 
-              {/* Queues List Section - Compact with Search & Scroll */}
+              {/* Queue Groups Section - Show queue groups with priorities */}
               <Card className="border-none bg-muted/20 shadow-sm overflow-hidden flex flex-col">
                 <CardHeader className="py-3 bg-muted/10 border-b flex flex-row items-center justify-between space-y-0">
                   <div className="flex items-center gap-2">
                     <Layers className="h-4 w-4 text-primary" />
-                    <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">{t('workers.config.queues')}</CardTitle>
+                    <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">{t('workers.config.queueGroups')}</CardTitle>
                   </div>
                   <div className="relative w-48 group">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -434,27 +442,49 @@ export default function WorkersPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="max-h-[220px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/10 hover:scrollbar-thumb-muted-foreground/20">
+                  <div className="max-h-[320px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/10 hover:scrollbar-thumb-muted-foreground/20">
                     <div className="divide-y divide-border/40">
-                      {Object.entries(selectedWorkerData.queues)
-                        .filter(([name]) => name.toLowerCase().includes(queueSearchQuery.toLowerCase()))
-                        .map(([queueName, weight]) => (
-                        <div key={queueName} className="flex items-center justify-between px-6 py-2 hover:bg-background/40 transition-colors group">
-                          <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary/30 group-hover:bg-primary transition-colors shrink-0" />
-                            <span className="text-[11px] font-bold font-mono tracking-tight uppercase truncate">{queueName.split(':')[1] || queueName}</span>
+                      {(selectedWorkerData.queue_groups || [])
+                        .filter((qg) => qg.name.toLowerCase().includes(queueSearchQuery.toLowerCase()))
+                        .map((queueGroup) => (
+                        <div key={queueGroup.name} className="px-6 py-3 hover:bg-background/40 transition-colors group">
+                          {/* Queue Group Header */}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className="h-2 w-2 rounded-full bg-primary/50 group-hover:bg-primary transition-colors shrink-0" />
+                              <span className="text-[12px] font-black font-mono tracking-tight uppercase truncate">{queueGroup.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Cpu className="h-3 w-3 text-muted-foreground opacity-50" />
+                              <Badge variant="outline" className="h-5 text-[10px] font-black bg-background border-blue-500/20 text-blue-600 dark:text-blue-400 rounded-md px-2">
+                                {t('workers.config.concurrency')}: {queueGroup.concurrency}
+                              </Badge>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-30">W</span>
-                            <Badge variant="outline" className="min-w-[32px] justify-center h-5 text-[10px] font-black bg-background border-primary/10 text-primary rounded-md px-1">
-                              {weight}
-                            </Badge>
+                          {/* Priorities */}
+                          <div className="ml-5 flex flex-wrap gap-1.5">
+                            {Object.entries(queueGroup.priorities || {})
+                              .sort(([, a], [, b]) => b - a)
+                              .map(([priority, weight]) => (
+                              <Badge 
+                                key={priority} 
+                                variant="secondary" 
+                                className={cn(
+                                  "h-5 text-[9px] font-bold rounded-md px-2",
+                                  priority === 'critical' && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+                                  priority === 'default' && "bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300",
+                                  priority === 'low' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                )}
+                              >
+                                {priority}: {weight}
+                              </Badge>
+                            ))}
                           </div>
                         </div>
                       ))}
-                      {Object.entries(selectedWorkerData.queues).filter(([name]) => name.toLowerCase().includes(queueSearchQuery.toLowerCase())).length === 0 && (
+                      {(selectedWorkerData.queue_groups || []).filter((qg) => qg.name.toLowerCase().includes(queueSearchQuery.toLowerCase())).length === 0 && (
                         <div className="py-8 text-center">
-                          <p className="text-[10px] text-muted-foreground font-medium opacity-50 italic">No queues found</p>
+                          <p className="text-[10px] text-muted-foreground font-medium opacity-50 italic">{t('workers.noQueueGroups', 'No queue groups found')}</p>
                         </div>
                       )}
                     </div>

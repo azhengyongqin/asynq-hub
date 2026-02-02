@@ -52,14 +52,26 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 
 	var req struct {
 		WorkerName   string          `json:"worker_name" binding:"required"`
-		Queue        string          `json:"queue" binding:"required"`
-		TaskID       string          `json:"task_id"` // 可选，默认生成
+		Queue        string          `json:"queue" binding:"required"` // 队列组名称
+		Priority     string          `json:"priority"`                 // 优先级：critical, default, low（默认 default）
+		TaskID       string          `json:"task_id"`                  // 可选，默认生成
 		Payload      json.RawMessage `json:"payload" binding:"required"`
 		DelaySeconds int32           `json:"delay_seconds"`
 		RunAt        *time.Time      `json:"run_at"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	// 默认优先级为 default
+	if req.Priority == "" {
+		req.Priority = workers.PriorityDefault
+	}
+
+	// 验证优先级
+	if req.Priority != workers.PriorityCritical && req.Priority != workers.PriorityDefault && req.Priority != workers.PriorityLow {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "priority 必须是 critical, default 或 low"})
 		return
 	}
 
@@ -98,9 +110,15 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
-	// 验证 queue 是否在 worker 的配置中
+	// 验证队列组是否存在
 	if !h.workerStore.HasQueue(req.WorkerName, req.Queue) {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "队列不存在于 worker 配置中"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "队列组不存在于 worker 配置中"})
+		return
+	}
+
+	// 验证队列组的优先级是否存在
+	if !h.workerStore.HasQueueWithPriority(req.WorkerName, req.Queue, req.Priority) {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "优先级不存在于队列组配置中"})
 		return
 	}
 
@@ -110,8 +128,8 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		taskID = asynqx.NewTaskID()
 	}
 
-	// 构造完整队列名：workerName:queueName
-	fullQueue := req.WorkerName + ":" + req.Queue
+	// 构造完整队列名：workerName:queueGroupName:priority
+	fullQueue := workerCfg.FullQueueName(req.Queue, req.Priority)
 
 	// 构造 task payload
 	var msg = struct {
@@ -152,7 +170,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 			TaskID:      taskID,
 			WorkerName:  req.WorkerName,
 			Queue:       fullQueue,
-			Priority:    0,
+			Priority:    priorityToInt(req.Priority),
 			Payload:     req.Payload,
 			Status:      string(model.TaskStatusPending),
 			LastAttempt: 0,
@@ -163,9 +181,24 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		TaskID:      taskID,
 		WorkerName:  req.WorkerName,
 		Queue:       req.Queue,
+		Priority:    req.Priority,
 		AsynqTaskID: info.ID,
 		Status:      "enqueued",
 	})
+}
+
+// priorityToInt 将优先级字符串转换为整数（用于数据库存储）
+func priorityToInt(priority string) int {
+	switch priority {
+	case workers.PriorityCritical:
+		return 3
+	case workers.PriorityDefault:
+		return 2
+	case workers.PriorityLow:
+		return 1
+	default:
+		return 2
+	}
 }
 
 // ListTasks godoc

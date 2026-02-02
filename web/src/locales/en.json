@@ -40,9 +40,11 @@
       "retryCount": "Retry Count",
       "timeout": "Timeout",
       "queues": "Queue Configuration",
+      "queueGroups": "Queue Groups",
       "redis": "Redis Address",
       "lastHeartbeat": "Last Heartbeat"
     },
+    "noQueueGroups": "No queue groups configured",
     "stats": {
       "totalTasks": "Total Tasks",
       "successRate": "Success Rate",

@@ -7,3 +7,6 @@ node_modules
 .idea
 .volumes
 bin
+/cmd/server/webui
+./server
+./example

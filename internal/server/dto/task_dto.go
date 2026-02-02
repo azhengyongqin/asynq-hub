@@ -8,16 +8,17 @@ import (
 // CreateTaskRequest 创建任务请求
 type CreateTaskRequest struct {
 	WorkerName string          `json:"worker_name" binding:"required" example:"my-worker"`
-	Queue      string          `json:"queue" binding:"required" example:"default"`
+	Queue      string          `json:"queue" binding:"required" example:"web_crawl"` // 队列组名称
+	Priority   string          `json:"priority" example:"default"`                   // 优先级：critical, default, low
 	Payload    json.RawMessage `json:"payload" binding:"required"`
-	Priority   int             `json:"priority" example:"0"`
 }
 
 // CreateTaskResponse 创建任务响应
 type CreateTaskResponse struct {
 	TaskID      string `json:"task_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 	WorkerName  string `json:"worker_name" example:"my-worker"`
-	Queue       string `json:"queue" example:"default"`
+	Queue       string `json:"queue" example:"web_crawl"`
+	Priority    string `json:"priority" example:"default"`
 	AsynqTaskID string `json:"asynq_task_id"`
 	Status      string `json:"status" example:"pending"`
 }
@@ -26,7 +27,7 @@ type CreateTaskResponse struct {
 type TaskListRequest struct {
 	WorkerName string `form:"worker_name" example:"my-worker"`
 	Status     string `form:"status" example:"pending"`
-	Queue      string `form:"queue" example:"default"`
+	Queue      string `form:"queue" example:"web_crawl"`
 	Limit      int    `form:"limit" example:"20"`
 	Offset     int    `form:"offset" example:"0"`
 }

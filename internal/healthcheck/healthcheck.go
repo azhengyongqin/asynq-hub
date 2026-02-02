@@ -2,23 +2,24 @@ package healthcheck
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/hibiken/asynq"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"gorm.io/gorm"
 )
 
 // HealthChecker 健康检查器
 type HealthChecker struct {
-	pgPool      *pgxpool.Pool
+	db          *gorm.DB
 	asynqClient *asynq.Client
 	redisAddr   string
 }
 
 // NewHealthChecker 创建健康检查器
-func NewHealthChecker(pgPool *pgxpool.Pool, asynqClient *asynq.Client, redisAddr string) *HealthChecker {
+func NewHealthChecker(db *gorm.DB, asynqClient *asynq.Client, redisAddr string) *HealthChecker {
 	return &HealthChecker{
-		pgPool:      pgPool,
+		db:          db,
 		asynqClient: asynqClient,
 		redisAddr:   redisAddr,
 	}
@@ -48,7 +49,7 @@ func (h *HealthChecker) ReadinessCheck(ctx context.Context) CheckResult {
 	}
 
 	// 检查 PostgreSQL 连接
-	if h.pgPool != nil {
+	if h.db != nil {
 		if err := h.checkPostgres(ctx); err != nil {
 			result.Checks["postgres"] = "error: " + err.Error()
 			result.Status = "error"
@@ -80,7 +81,16 @@ func (h *HealthChecker) checkPostgres(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
-	return h.pgPool.Ping(ctx)
+	sqlDB, err := h.db.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.PingContext(ctx)
+}
+
+// GetSqlDB 获取底层 sql.DB（用于需要 sql.DB 的场景）
+func (h *HealthChecker) GetSqlDB() (*sql.DB, error) {
+	return h.db.DB()
 }
 
 // checkRedis 检查 Redis 连接（通过 Asynq Inspector）

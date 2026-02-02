@@ -11,14 +11,13 @@ import (
 
 // WorkerConfig Worker 注册配置
 type WorkerConfig struct {
-	WorkerName        string         `json:"worker_name"`
-	BaseURL           string         `json:"base_url"`
-	RedisAddr         string         `json:"redis_addr"`
-	Concurrency       int            `json:"concurrency"`
-	Queues            map[string]int `json:"queues"` // queue_name -> weight
-	DefaultRetryCount int            `json:"default_retry_count"`
-	DefaultTimeout    int            `json:"default_timeout"` // seconds
-	DefaultDelay      int            `json:"default_delay"`   // seconds
+	WorkerName        string             `json:"worker_name"`
+	BaseURL           string             `json:"base_url"`
+	RedisAddr         string             `json:"redis_addr"`
+	QueueGroups       []QueueGroupConfig `json:"queue_groups"` // 队列组配置
+	DefaultRetryCount int                `json:"default_retry_count"`
+	DefaultTimeout    int                `json:"default_timeout"` // seconds
+	DefaultDelay      int                `json:"default_delay"`   // seconds
 }
 
 type Registrar struct {
@@ -48,8 +47,7 @@ func (r Registrar) RegisterWorker(ctx context.Context, config WorkerConfig, over
 		"worker_name":         config.WorkerName,
 		"base_url":            config.BaseURL,
 		"redis_addr":          config.RedisAddr,
-		"concurrency":         config.Concurrency,
-		"queues":              config.Queues,
+		"queue_groups":        config.QueueGroups,
 		"default_retry_count": config.DefaultRetryCount,
 		"default_timeout":     config.DefaultTimeout,
 		"default_delay":       config.DefaultDelay,

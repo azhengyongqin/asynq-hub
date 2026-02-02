@@ -143,7 +143,7 @@ func generateTasksForWorker(worker *sdk.Worker, workerName string, queueGroups [
 			priority := priorities[rand.Intn(len(priorities))]
 
 			worker.EnqueueWithPriority(qg.Name, priority, &sdk.Task{
-				ID:      taskID,
+				TaskID:  taskID,
 				Payload: payload,
 			})
 
@@ -336,7 +336,7 @@ func handleTask(ctx context.Context, t *asynq.Task, taskType string, minMs, maxM
 		return err
 	}
 
-	log.Printf("[%s] 开始: task_id=%s", taskType, task.ID)
+	log.Printf("[%s] 开始: task_id=%s", taskType, task.TaskID)
 
 	// 模拟处理时间（随机）
 	duration := time.Duration(minMs+rand.Intn(maxMs-minMs)) * time.Millisecond
@@ -344,7 +344,7 @@ func handleTask(ctx context.Context, t *asynq.Task, taskType string, minMs, maxM
 
 	// 检查是否有 "always_fail" 标记（用于模拟超过最大重试次数）
 	if alwaysFail, ok := payload["always_fail"].(bool); ok && alwaysFail {
-		log.Printf("[%s] 持续失败: task_id=%s (always_fail=true, 将超过最大重试次数)", taskType, task.ID)
+		log.Printf("[%s] 持续失败: task_id=%s (always_fail=true, 将超过最大重试次数)", taskType, task.TaskID)
 		return fmt.Errorf("任务配置为持续失败: always_fail=true")
 	}
 
@@ -352,13 +352,13 @@ func handleTask(ctx context.Context, t *asynq.Task, taskType string, minMs, maxM
 	for _, v := range payload {
 		if str, ok := v.(string); ok {
 			if strings.HasPrefix(str, "fail") || str == "" {
-				log.Printf("[%s] 失败: task_id=%s (故意失败)", taskType, task.ID)
+				log.Printf("[%s] 失败: task_id=%s (故意失败)", taskType, task.TaskID)
 				return fmt.Errorf("任务故意失败: %v", payload)
 			}
 		}
 	}
 
-	log.Printf("[%s] 完成: task_id=%s (耗时: %v)", taskType, task.ID, duration)
+	log.Printf("[%s] 完成: task_id=%s (耗时: %v)", taskType, task.TaskID, duration)
 	return nil
 }
 
@@ -380,7 +380,7 @@ func createInitialTasks(work *sdk.Worker) {
 	for i, task := range tasks {
 		taskID := fmt.Sprintf("%s-%s-%d", task.queueGroup, suffix, i)
 		work.EnqueueWithPriority(task.queueGroup, task.priority, &sdk.Task{
-			ID:      taskID,
+			TaskID:  taskID,
 			Payload: []byte(task.payload),
 		})
 	}

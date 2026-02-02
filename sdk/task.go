@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 )
 
-// Task：对齐用户侧示例使用方式
-// - 外层 JSON 会作为 asynq task payload
+// Task：SDK 任务结构体
+// - TaskID 是任务的业务唯一标识（对应数据库 task_id 字段）
 // - Payload 是业务 payload（JSON 原文）
 type Task struct {
-	ID      string          `json:"id,omitempty"`
 	TaskID  string          `json:"task_id,omitempty"`
 	Payload json.RawMessage `json:"payload"`
 }

@@ -329,9 +329,6 @@ func (w *Worker) registerHandler(qg *QueueGroup, queueGroup, priority string, fn
 		var task Task
 		if err := json.Unmarshal(t.Payload(), &task); err == nil {
 			taskID = task.TaskID
-			if taskID == "" {
-				taskID = task.ID
-			}
 		}
 
 		// 没有 task_id 时使用 asynq task id
@@ -387,9 +384,6 @@ func (w *Worker) EnqueueWithPriority(queueGroup, priority string, task *Task) {
 	if task == nil {
 		log.Printf("enqueue ignored: nil task")
 		return
-	}
-	if task.TaskID == "" {
-		task.TaskID = task.ID
 	}
 
 	// 验证队列组和优先级

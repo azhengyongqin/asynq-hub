@@ -58,7 +58,7 @@ func NewRouter(deps Deps) http.Handler {
 	// 创建各个 handler 实例
 	healthHandler := handler.NewHealthHandler(deps.HealthChecker)
 	workerHandler := handler.NewWorkerHandler(deps.WorkerStore, deps.WorkerRepo, deps.TaskRepo)
-	taskHandler := handler.NewTaskHandler(deps.AsynqClient, deps.TaskRepo, deps.WorkerStore)
+	taskHandler := handler.NewTaskHandler(deps.AsynqClient, deps.TaskRepo, deps.WorkerRepo, deps.WorkerStore)
 	queueHandler := handler.NewQueueHandler(deps.AsynqClient, deps.WorkerStore)
 
 	// 健康检查路由

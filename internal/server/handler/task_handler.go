@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hibiken/asynq"
 
+	"github.com/azhengyongqin/asynq-hub/internal/logger"
 	"github.com/azhengyongqin/asynq-hub/internal/middleware"
 	"github.com/azhengyongqin/asynq-hub/internal/model"
 	asynqx "github.com/azhengyongqin/asynq-hub/internal/queue"
@@ -21,14 +22,16 @@ import (
 type TaskHandler struct {
 	asynqClient *asynq.Client
 	taskRepo    repository.TaskRepository
+	workerRepo  repository.WorkerRepository
 	workerStore *workers.Store
 }
 
 // NewTaskHandler 创建 TaskHandler
-func NewTaskHandler(asynqClient *asynq.Client, taskRepo repository.TaskRepository, workerStore *workers.Store) *TaskHandler {
+func NewTaskHandler(asynqClient *asynq.Client, taskRepo repository.TaskRepository, workerRepo repository.WorkerRepository, workerStore *workers.Store) *TaskHandler {
 	return &TaskHandler{
 		asynqClient: asynqClient,
 		taskRepo:    taskRepo,
+		workerRepo:  workerRepo,
 		workerStore: workerStore,
 	}
 }
@@ -122,6 +125,29 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
+	// 确保 worker 在数据库中存在（因为 task 有外键约束）
+	if h.workerRepo != nil {
+		if _, err := h.workerRepo.Get(c.Request.Context(), req.WorkerName); err != nil {
+			// Worker 不在数据库中，需要先创建
+			repoConfig := repository.WorkerConfig{
+				WorkerName:        workerCfg.WorkerName,
+				BaseURL:           workerCfg.BaseURL,
+				RedisAddr:         workerCfg.RedisAddr,
+				QueueGroups:       convertWorkerQueueGroups(workerCfg.QueueGroups),
+				DefaultRetryCount: workerCfg.DefaultRetryCount,
+				DefaultTimeout:    workerCfg.DefaultTimeout,
+				DefaultDelay:      workerCfg.DefaultDelay,
+				IsEnabled:         workerCfg.IsEnabled,
+				LastHeartbeatAt:   workerCfg.LastHeartbeatAt,
+			}
+			if err := h.workerRepo.Upsert(c.Request.Context(), repoConfig); err != nil {
+				logger.L.Error().Err(err).Str("worker_name", req.WorkerName).Msg("创建 worker 到数据库失败")
+				c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "创建 worker 失败: " + err.Error()})
+				return
+			}
+		}
+	}
+
 	// 生成或使用提供的 task_id
 	taskID := req.TaskID
 	if taskID == "" {
@@ -166,15 +192,28 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 
 	// 记录到数据库
 	if h.taskRepo != nil {
-		_ = h.taskRepo.UpsertTask(c.Request.Context(), repository.Task{
+		// 确保 payload 不为 null
+		payload := req.Payload
+		if payload == nil || string(payload) == "null" {
+			payload = []byte("{}")
+		}
+
+		task := repository.Task{
 			TaskID:      taskID,
 			WorkerName:  req.WorkerName,
 			Queue:       fullQueue,
 			Priority:    priorityToInt(req.Priority),
-			Payload:     req.Payload,
+			Payload:     payload,
 			Status:      string(model.TaskStatusPending),
 			LastAttempt: 0,
-		})
+		}
+		if err := h.taskRepo.UpsertTask(c.Request.Context(), task); err != nil {
+			logger.L.Error().Err(err).
+				Str("task_id", taskID).
+				Str("worker_name", req.WorkerName).
+				Str("queue", fullQueue).
+				Msg("保存任务到数据库失败")
+		}
 	}
 
 	c.JSON(http.StatusOK, dto.CreateTaskResponse{
@@ -541,4 +580,17 @@ func (h *TaskHandler) BatchRetry(c *gin.Context) {
 		TotalRetried: len(newTaskIDs),
 		NewTaskIDs:   newTaskIDs,
 	})
+}
+
+// convertWorkerQueueGroups 将 workers.QueueGroupConfig 转换为 repository.QueueGroupConfig
+func convertWorkerQueueGroups(queueGroups []workers.QueueGroupConfig) []repository.QueueGroupConfig {
+	result := make([]repository.QueueGroupConfig, len(queueGroups))
+	for i, qg := range queueGroups {
+		result[i] = repository.QueueGroupConfig{
+			Name:        qg.Name,
+			Concurrency: int32(qg.Concurrency),
+			Priorities:  qg.Priorities,
+		}
+	}
+	return result
 }
